@@ -23,6 +23,7 @@ type Report struct {
 	Command    string `json:"command"`
 	ExitCode   int    `json:"exitCode"`
 	LineReport string `json:"lineReport"`
+	Pid        int    `json:"pid"`
 }
 
 func Run(args []string) int {
@@ -57,6 +58,7 @@ func Run(args []string) int {
 		o.failReport(cmdArgs, err.Error())
 		return wrapcommander.ResolveExitCode(err)
 	}
+	pid := cmd.Process.Pid
 
 	go func() {
 		defer stdoutPipe.Close()
@@ -80,6 +82,7 @@ func Run(args []string) int {
 		Command:    shellquote.Join(cmdArgs...),
 		ExitCode:   exitCode,
 		LineReport: lineReport,
+		Pid:        pid,
 	}
 	o.runReporter(report)
 	return exitCode
@@ -87,7 +90,7 @@ func Run(args []string) int {
 
 func (o *opts) failReport(cmdArgs []string, errStr string) {
 	report := Report{
-		ExitCode: -1,
+		ExitCode:   -1,
 		Command:    shellquote.Join(cmdArgs...),
 		LineReport: fmt.Sprintf("failed to execute command: %s", errStr),
 	}
@@ -109,6 +112,7 @@ func (o *opts) runReporter(report Report) {
 	argv := append(args[1:], string(byt))
 	cmd := exec.Command(prog, argv...)
 	out, err := cmd.CombinedOutput()
+	// DEBUG
 	log.Println(string(out))
 	if err != nil {
 		log.Print(err)
