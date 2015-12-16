@@ -21,7 +21,7 @@ type opts struct {
 type Report struct {
 	Output     string `json:"output"`
 	Command    string `json:"command"`
-	ExitCode   *int   `json:"exitCode,omitempty"`
+	ExitCode   int    `json:"exitCode"`
 	LineReport string `json:"lineReport"`
 }
 
@@ -69,7 +69,6 @@ func Run(args []string) int {
 	}()
 
 	err = cmd.Wait()
-	fmt.Printf("%+v\n", err)
 	exitCode := wrapcommander.ResolveExitCode(err)
 
 	lineReport := fmt.Sprintf("command exited with code: %d", exitCode)
@@ -79,7 +78,7 @@ func Run(args []string) int {
 	report := Report{
 		Output:     bufMerged.String(),
 		Command:    shellquote.Join(cmdArgs...),
-		ExitCode:   &exitCode,
+		ExitCode:   exitCode,
 		LineReport: lineReport,
 	}
 	o.runReporter(report)
@@ -88,6 +87,7 @@ func Run(args []string) int {
 
 func (o *opts) failReport(cmdArgs []string, errStr string) {
 	report := Report{
+		ExitCode: -1,
 		Command:    shellquote.Join(cmdArgs...),
 		LineReport: fmt.Sprintf("failed to execute command: %s", errStr),
 	}
