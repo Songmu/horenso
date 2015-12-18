@@ -23,6 +23,8 @@ type opts struct {
 type Report struct {
 	Command    string    `json:"command"`
 	Output     string    `json:"output"`
+	Stdout     string    `json:"stdout"`
+	Stderr     string    `json:"stderr"`
 	ExitCode   int       `json:"exitCode"`
 	LineReport string    `json:"lineReport"`
 	Pid        int       `json:"pid"`
@@ -54,9 +56,11 @@ func Run(args []string) int {
 		return wrapcommander.ResolveExitCode(err)
 	}
 
+	var bufStdout bytes.Buffer
+	var bufStderr bytes.Buffer
 	var bufMerged bytes.Buffer
-	stdoutPipe2 := io.TeeReader(stdoutPipe, &bufMerged)
-	stderrPipe2 := io.TeeReader(stderrPipe, &bufMerged)
+	stdoutPipe2 := io.TeeReader(io.TeeReader(stdoutPipe, &bufStdout), &bufMerged)
+	stderrPipe2 := io.TeeReader(io.TeeReader(stderrPipe, &bufStderr), &bufMerged)
 
 	r.StartAt = time.Now()
 	err = cmd.Start()
@@ -85,6 +89,8 @@ func Run(args []string) int {
 	if r.ExitCode > 128 {
 		r.LineReport = fmt.Sprintf("command died with signal: %d", r.ExitCode&127)
 	}
+	r.Stdout = bufStdout.String()
+	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
 	o.runReporter(r)
 	return r.ExitCode
@@ -115,7 +121,7 @@ func (o *opts) runReporter(report Report) {
 	cmd := exec.Command(prog, argv...)
 	out, err := cmd.CombinedOutput()
 	// DEBUG
-	log.Println(string(out))
+	fmt.Println(string(out))
 	if err != nil {
 		log.Print(err)
 	}
