@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
@@ -16,14 +17,17 @@ import (
 
 type opts struct {
 	Reporter string `long:"reporter" required:"true"`
+	Noticer  string `long:"noticer"`
 }
 
 type Report struct {
-	Output     string `json:"output"`
-	Command    string `json:"command"`
-	ExitCode   int    `json:"exitCode"`
-	LineReport string `json:"lineReport"`
-	Pid        int    `json:"pid"`
+	Command    string    `json:"command"`
+	Output     string    `json:"output"`
+	ExitCode   int       `json:"exitCode"`
+	LineReport string    `json:"lineReport"`
+	Pid        int       `json:"pid"`
+	StartAt    time.Time `json:"startAt"`
+	EndAt      time.Time `json:"endAt"`
 }
 
 func Run(args []string) int {
@@ -33,6 +37,9 @@ func Run(args []string) int {
 		return 2
 	}
 
+	r := Report{
+		Command: shellquote.Join(cmdArgs...),
+	}
 	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
@@ -51,6 +58,7 @@ func Run(args []string) int {
 	stdoutPipe2 := io.TeeReader(stdoutPipe, &bufMerged)
 	stderrPipe2 := io.TeeReader(stderrPipe, &bufMerged)
 
+	r.StartAt = time.Now()
 	err = cmd.Start()
 	if err != nil {
 		stderrPipe.Close()
@@ -58,7 +66,7 @@ func Run(args []string) int {
 		o.failReport(cmdArgs, err.Error())
 		return wrapcommander.ResolveExitCode(err)
 	}
-	pid := cmd.Process.Pid
+	r.Pid = cmd.Process.Pid
 
 	go func() {
 		defer stdoutPipe.Close()
@@ -71,21 +79,15 @@ func Run(args []string) int {
 	}()
 
 	err = cmd.Wait()
-	exitCode := wrapcommander.ResolveExitCode(err)
-
-	lineReport := fmt.Sprintf("command exited with code: %d", exitCode)
-	if exitCode > 128 {
-		lineReport = fmt.Sprintf("command died with signal: %d", exitCode&127)
+	r.EndAt = time.Now()
+	r.ExitCode = wrapcommander.ResolveExitCode(err)
+	r.LineReport = fmt.Sprintf("command exited with code: %d", r.ExitCode)
+	if r.ExitCode > 128 {
+		r.LineReport = fmt.Sprintf("command died with signal: %d", r.ExitCode&127)
 	}
-	report := Report{
-		Output:     bufMerged.String(),
-		Command:    shellquote.Join(cmdArgs...),
-		ExitCode:   exitCode,
-		LineReport: lineReport,
-		Pid:        pid,
-	}
-	o.runReporter(report)
-	return exitCode
+	r.Output = bufMerged.String()
+	o.runReporter(r)
+	return r.ExitCode
 }
 
 func (o *opts) failReport(cmdArgs []string, errStr string) {
