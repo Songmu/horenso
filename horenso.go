@@ -16,8 +16,9 @@ import (
 )
 
 type opts struct {
-	Reporter string `long:"reporter" required:"true"`
-	Noticer  string `long:"noticer"`
+	Reporter  string `long:"reporter" required:"true"`
+	Noticer   string `long:"noticer"`
+	TimeStamp bool   `long:"timestamp"`
 }
 
 type Report struct {
@@ -59,8 +60,13 @@ func Run(args []string) int {
 	var bufStdout bytes.Buffer
 	var bufStderr bytes.Buffer
 	var bufMerged bytes.Buffer
-	stdoutPipe2 := io.TeeReader(io.TeeReader(stdoutPipe, &bufStdout), &bufMerged)
-	stderrPipe2 := io.TeeReader(io.TeeReader(stderrPipe, &bufStderr), &bufMerged)
+
+	var wtr io.Writer = &bufMerged
+	if o.TimeStamp {
+		wtr = newTimestampWriter(&bufMerged)
+	}
+	stdoutPipe2 := io.TeeReader(io.TeeReader(stdoutPipe, &bufStdout), wtr)
+	stderrPipe2 := io.TeeReader(io.TeeReader(stderrPipe, &bufStderr), wtr)
 
 	r.StartAt = time.Now()
 	err = cmd.Start()
