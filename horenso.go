@@ -65,8 +65,8 @@ func Run(args []string) int {
 	if o.TimeStamp {
 		wtr = newTimestampWriter(&bufMerged)
 	}
-	stdoutPipe2 := io.TeeReader(io.TeeReader(stdoutPipe, &bufStdout), wtr)
-	stderrPipe2 := io.TeeReader(io.TeeReader(stderrPipe, &bufStderr), wtr)
+	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
+	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
 	r.StartAt = time.Now()
 	err = cmd.Start()
