@@ -47,13 +47,13 @@ func Run(args []string) int {
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		o.failReport(cmdArgs, err.Error())
+		o.failReport(r, err.Error())
 		return wrapcommander.ResolveExitCode(err)
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		stdoutPipe.Close()
-		o.failReport(cmdArgs, err.Error())
+		o.failReport(r, err.Error())
 		return wrapcommander.ResolveExitCode(err)
 	}
 
@@ -73,7 +73,7 @@ func Run(args []string) int {
 	if err != nil {
 		stderrPipe.Close()
 		stdoutPipe.Close()
-		o.failReport(cmdArgs, err.Error())
+		o.failReport(r, err.Error())
 		return wrapcommander.ResolveExitCode(err)
 	}
 	r.Pid = cmd.Process.Pid
@@ -87,6 +87,7 @@ func Run(args []string) int {
 		defer stderrPipe.Close()
 		io.Copy(os.Stderr, stderrPipe2)
 	}()
+	o.runNoticer(r)
 
 	err = cmd.Wait()
 	r.EndAt = time.Now()
@@ -102,35 +103,39 @@ func Run(args []string) int {
 	return r.ExitCode
 }
 
-func (o *opts) failReport(cmdArgs []string, errStr string) {
-	report := Report{
-		ExitCode:   -1,
-		Command:    shellquote.Join(cmdArgs...),
-		LineReport: fmt.Sprintf("failed to execute command: %s", errStr),
-	}
-	o.runReporter(report)
+func (o *opts) failReport(r Report, errStr string) {
+	r.ExitCode = -1
+	r.LineReport = fmt.Sprintf("failed to execute command: %s", errStr)
+	o.runNoticer(r)
+	o.runReporter(r)
 }
 
-func (o *opts) runReporter(report Report) {
-	args, err := shellquote.Split(o.Reporter)
-	if err != nil {
-		log.Print(err)
-		return
+func runHandler(cmdStr string, r Report) ([]byte, error) {
+	args, err := shellquote.Split(cmdStr)
+	if err != nil || len(args) < 1 {
+		log.Printf("invalid handler %q", cmdStr)
+		return nil, nil
 	}
-	byt, _ := json.Marshal(report)
-	if len(args) < 1 {
-		log.Println("no reporter specified")
-		return
-	}
+	byt, _ := json.Marshal(r)
 	prog := args[0]
 	argv := append(args[1:], string(byt))
 	cmd := exec.Command(prog, argv...)
-	out, err := cmd.CombinedOutput()
+	return cmd.CombinedOutput()
+}
+
+func (o *opts) runNoticer(r Report) {
+	if o.Noticer == "" {
+		return
+	}
+	out, _ := runHandler(o.Noticer, r)
 	// DEBUG
 	fmt.Println(string(out))
-	if err != nil {
-		log.Print(err)
-	}
+}
+
+func (o *opts) runReporter(r Report) {
+	out, _ := runHandler(o.Reporter, r)
+	// DEBUG
+	fmt.Println(string(out))
 }
 
 func parseArgs(args []string) (*opts, error) {
