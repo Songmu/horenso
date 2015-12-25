@@ -33,28 +33,20 @@ type Report struct {
 	EndAt      time.Time `json:"endAt"`
 }
 
-func Run(args []string) int {
-	optArgs, cmdArgs := wrapcommander.SeparateArgs(args)
-	o, err := parseArgs(optArgs)
-	if err != nil {
-		return 2
-	}
-
+func (o *opts) run(args []string) Report {
 	r := Report{
-		Command: shellquote.Join(cmdArgs...),
+		Command: shellquote.Join(args...),
 	}
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd := exec.Command(args[0], args[1:]...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		o.failReport(r, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error())
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		stdoutPipe.Close()
-		o.failReport(r, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error())
 	}
 
 	var bufStdout bytes.Buffer
@@ -73,8 +65,7 @@ func Run(args []string) int {
 	if err != nil {
 		stderrPipe.Close()
 		stdoutPipe.Close()
-		o.failReport(r, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error())
 	}
 	r.Pid = cmd.Process.Pid
 
@@ -100,14 +91,26 @@ func Run(args []string) int {
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
 	o.runReporter(r)
+
+	return r
+}
+
+func Run(args []string) int {
+	optArgs, cmdArgs := wrapcommander.SeparateArgs(args)
+	o, err := parseArgs(optArgs)
+	if err != nil {
+		return 2
+	}
+	r := o.run(cmdArgs)
 	return r.ExitCode
 }
 
-func (o *opts) failReport(r Report, errStr string) {
+func (o *opts) failReport(r Report, errStr string) Report {
 	r.ExitCode = -1
 	r.LineReport = fmt.Sprintf("failed to execute command: %s", errStr)
 	o.runNoticer(r)
 	o.runReporter(r)
+	return r
 }
 
 func runHandler(cmdStr string, r Report) ([]byte, error) {
