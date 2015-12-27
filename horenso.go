@@ -23,17 +23,17 @@ type opts struct {
 }
 
 type Report struct {
-	Command     string    `json:"command"`
-	CommandArgs []string  `json:"commandArgs"`
-	Tag         string    `json:"tag,omitempty"`
-	Output      string    `json:"output"`
-	Stdout      string    `json:"stdout"`
-	Stderr      string    `json:"stderr"`
-	ExitCode    int       `json:"exitCode"`
-	LineReport  string    `json:"lineReport"`
-	Pid         int       `json:"pid"`
-	StartAt     time.Time `json:"startAt"`
-	EndAt       time.Time `json:"endAt"`
+	Command     string     `json:"command"`
+	CommandArgs []string   `json:"commandArgs"`
+	Tag         string     `json:"tag,omitempty"`
+	Output      string     `json:"output"`
+	Stdout      string     `json:"stdout"`
+	Stderr      string     `json:"stderr"`
+	ExitCode    int        `json:"exitCode"`
+	LineReport  string     `json:"lineReport"`
+	Pid         int        `json:"pid"`
+	StartAt     *time.Time `json:"startAt,omitempty"`
+	EndAt       *time.Time `json:"endAt,omitempty"`
 }
 
 func (o *opts) run(args []string) Report {
@@ -46,12 +46,12 @@ func (o *opts) run(args []string) Report {
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return o.failReport(r, err.Error())
+		return o.failReport(r, err)
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		stdoutPipe.Close()
-		return o.failReport(r, err.Error())
+		return o.failReport(r, err)
 	}
 
 	var bufStdout bytes.Buffer
@@ -65,12 +65,12 @@ func (o *opts) run(args []string) Report {
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
-	r.StartAt = time.Now()
+	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
 		stderrPipe.Close()
 		stdoutPipe.Close()
-		return o.failReport(r, err.Error())
+		return o.failReport(r, err)
 	}
 	r.Pid = cmd.Process.Pid
 
@@ -91,7 +91,7 @@ func (o *opts) run(args []string) Report {
 	}()
 
 	err = cmd.Wait()
-	r.EndAt = time.Now()
+	r.EndAt = now()
 	r.ExitCode = wrapcommander.ResolveExitCode(err)
 	r.LineReport = fmt.Sprintf("command exited with code: %d", r.ExitCode)
 	if r.ExitCode > 128 {
@@ -106,6 +106,11 @@ func (o *opts) run(args []string) Report {
 	return r
 }
 
+func now() *time.Time {
+	now := time.Now()
+	return &now
+}
+
 func Run(args []string) int {
 	optArgs, cmdArgs := wrapcommander.SeparateArgs(args)
 	o, err := parseArgs(optArgs)
@@ -116,11 +121,12 @@ func Run(args []string) int {
 	return r.ExitCode
 }
 
-func (o *opts) failReport(r Report, errStr string) Report {
+func (o *opts) failReport(r Report, err error) Report {
 	r.ExitCode = -1
-	r.LineReport = fmt.Sprintf("failed to execute command: %s", errStr)
+	r.LineReport = fmt.Sprintf("failed to execute command: %s", err)
 	o.runNoticer(r)
 	o.runReporter(r)
+	r.ExitCode = wrapcommander.ResolveExitCode(err)
 	return r
 }
 
