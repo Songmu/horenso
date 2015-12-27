@@ -30,7 +30,7 @@ func TestRun(t *testing.T) {
 	noticeReport := temp()
 	fname := temp()
 	fname2 := temp()
-	o, err := parseArgs([]string{
+	_, o, cmdArgs, err := parseArgs([]string{
 		"--noticer",
 		"go run _testdata/reporter.go " + noticeReport,
 		"-n", "invalid",
@@ -38,11 +38,13 @@ func TestRun(t *testing.T) {
 		"go run _testdata/reporter.go " + fname,
 		"-r",
 		"go run _testdata/reporter.go " + fname2,
+		"--",
+		"go", "run", "_testdata/run.go",
 	})
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	r, err := o.run([]string{"go", "run", "_testdata/run.go"})
+	r, err := o.run(cmdArgs)
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}

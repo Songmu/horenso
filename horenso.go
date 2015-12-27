@@ -16,10 +16,10 @@ import (
 )
 
 type opts struct {
-	Reporter  []string `short:"r" long:"reporter" required:"true"`
-	Noticer   []string `short:"n" long:"noticer"`
-	TimeStamp bool     `short:"T" long:"timestamp"`
-	Tag       string   `short:"t" long:"tag"`
+	Reporter  []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
+	Noticer   []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
+	TimeStamp bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
+	Tag       string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 }
 
 type Report struct {
@@ -111,10 +111,20 @@ func now() *time.Time {
 	return &now
 }
 
+func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
+	o := &opts{}
+	p := flags.NewParser(o, flags.Default)
+	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]"
+	rest, err := p.ParseArgs(args)
+	return p, o, rest, err
+}
+
 func Run(args []string) int {
-	optArgs, cmdArgs := wrapcommander.SeparateArgs(args)
-	o, err := parseArgs(optArgs)
-	if err != nil {
+	p, o, cmdArgs, err := parseArgs(args)
+	if err != nil || len(cmdArgs) < 1 {
+		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
+			p.WriteHelp(os.Stderr)
+		}
 		return 2
 	}
 	r, err := o.run(cmdArgs)
@@ -172,10 +182,4 @@ func (o *opts) runNoticer(r Report) {
 func (o *opts) runReporter(r Report) {
 	json, _ := json.Marshal(r)
 	runHandlers(o.Reporter, string(json))
-}
-
-func parseArgs(args []string) (*opts, error) {
-	opts := &opts{}
-	_, err := flags.ParseArgs(opts, args)
-	return opts, err
 }
