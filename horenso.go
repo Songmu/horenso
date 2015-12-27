@@ -22,6 +22,7 @@ type opts struct {
 	Tag       string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 }
 
+// Report is represents the result of the command
 type Report struct {
 	Command     string     `json:"command"`
 	CommandArgs []string   `json:"commandArgs"`
@@ -119,6 +120,7 @@ func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
 	return p, o, rest, err
 }
 
+// Run the horenso
 func Run(args []string) int {
 	p, o, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
