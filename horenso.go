@@ -73,10 +73,10 @@ func (o *opts) run(args []string) (Report, error) {
 		return o.failReport(r, err.Error()), err
 	}
 	r.Pid = cmd.Process.Pid
-	nCh := make(chan struct{})
+	done := make(chan struct{})
 	go func() {
 		o.runNoticer(r)
-		nCh <- struct{}{}
+		done <- struct{}{}
 	}()
 
 	go func() {
@@ -101,7 +101,7 @@ func (o *opts) run(args []string) (Report, error) {
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
 	o.runReporter(r)
-	<-nCh
+	<-done
 
 	return r, nil
 }
@@ -128,29 +128,33 @@ func (o *opts) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
 	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
-	o.runNoticer(r)
+	done := make(chan struct{})
+	go func() {
+		o.runNoticer(r)
+		done <- struct{}{}
+	}()
 	o.runReporter(r)
+	<-done
 	return r
 }
 
-func runHandler(cmdStr string, r Report) ([]byte, error) {
+func runHandler(cmdStr string, json string) ([]byte, error) {
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
 		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
 	}
-	byt, _ := json.Marshal(r)
 	prog := args[0]
-	argv := append(args[1:], string(byt))
+	argv := append(args[1:], json)
 	cmd := exec.Command(prog, argv...)
 	return cmd.CombinedOutput()
 }
 
-func runHandlers(handlers []string, r Report) {
+func runHandlers(handlers []string, json string) {
 	wg := &sync.WaitGroup{}
 	for _, handler := range handlers {
 		wg.Add(1)
 		go func(h string) {
-			runHandler(h, r)
+			runHandler(h, json)
 			wg.Done()
 		}(handler)
 	}
@@ -161,11 +165,13 @@ func (o *opts) runNoticer(r Report) {
 	if len(o.Noticer) < 1 {
 		return
 	}
-	runHandlers(o.Noticer, r)
+	json, _ := json.Marshal(r)
+	runHandlers(o.Noticer, string(json))
 }
 
 func (o *opts) runReporter(r Report) {
-	runHandlers(o.Reporter, r)
+	json, _ := json.Marshal(r)
+	runHandlers(o.Reporter, string(json))
 }
 
 func parseArgs(args []string) (*opts, error) {
