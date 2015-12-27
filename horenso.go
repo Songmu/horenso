@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	"github.com/Songmu/wrapcommander"
@@ -16,10 +17,10 @@ import (
 )
 
 type opts struct {
-	Reporter  string `short:"r" long:"reporter" required:"true"`
-	Noticer   string `short:"n" long:"noticer"`
-	TimeStamp bool   `short:"T" long:"timestamp"`
-	Tag       string `short:"t" long:"tag"`
+	Reporter  []string `short:"r" long:"reporter" required:"true"`
+	Noticer   []string `short:"n" long:"noticer"`
+	TimeStamp bool     `short:"T" long:"timestamp"`
+	Tag       string   `short:"t" long:"tag"`
 }
 
 type Report struct {
@@ -145,19 +146,29 @@ func runHandler(cmdStr string, r Report) ([]byte, error) {
 	return cmd.CombinedOutput()
 }
 
+func runHandlers(handlers []string, r Report) {
+	wg := &sync.WaitGroup{}
+	for _, handler := range handlers {
+		wg.Add(1)
+		go func() {
+			out, _ := runHandler(handler, r)
+			// DEBUG
+			fmt.Println(string(out))
+			wg.Done()
+		}()
+	}
+	wg.Wait()
+}
+
 func (o *opts) runNoticer(r Report) {
-	if o.Noticer == "" {
+	if len(o.Noticer) < 1 {
 		return
 	}
-	out, _ := runHandler(o.Noticer, r)
-	// DEBUG
-	fmt.Println(string(out))
+	runHandlers(o.Noticer, r)
 }
 
 func (o *opts) runReporter(r Report) {
-	out, _ := runHandler(o.Reporter, r)
-	// DEBUG
-	fmt.Println(string(out))
+	runHandlers(o.Reporter, r)
 }
 
 func parseArgs(args []string) (*opts, error) {
