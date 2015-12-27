@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"sync"
@@ -74,6 +73,11 @@ func (o *opts) run(args []string) (Report, error) {
 		return o.failReport(r, err.Error()), err
 	}
 	r.Pid = cmd.Process.Pid
+	nCh := make(chan struct{})
+	go func() {
+		o.runNoticer(r)
+		nCh <- struct{}{}
+	}()
 
 	go func() {
 		defer stdoutPipe.Close()
@@ -83,12 +87,6 @@ func (o *opts) run(args []string) (Report, error) {
 	go func() {
 		defer stderrPipe.Close()
 		io.Copy(os.Stderr, stderrPipe2)
-	}()
-
-	nCh := make(chan struct{})
-	go func() {
-		o.runNoticer(r)
-		nCh <- struct{}{}
 	}()
 
 	err = cmd.Wait()
@@ -138,8 +136,7 @@ func (o *opts) failReport(r Report, errStr string) Report {
 func runHandler(cmdStr string, r Report) ([]byte, error) {
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
-		log.Printf("invalid handler %q", cmdStr)
-		return nil, nil
+		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
 	}
 	byt, _ := json.Marshal(r)
 	prog := args[0]

@@ -33,6 +33,7 @@ func TestRun(t *testing.T) {
 	o, err := parseArgs([]string{
 		"--noticer",
 		"go run _testdata/reporter.go " + noticeReport,
+		"-n", "invalid",
 		"--reporter",
 		"go run _testdata/reporter.go " + fname,
 		"-r",
