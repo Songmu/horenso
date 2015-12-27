@@ -150,12 +150,10 @@ func runHandlers(handlers []string, r Report) {
 	wg := &sync.WaitGroup{}
 	for _, handler := range handlers {
 		wg.Add(1)
-		go func() {
-			out, _ := runHandler(handler, r)
-			// DEBUG
-			fmt.Println(string(out))
+		go func(h string) {
+			runHandler(h, r)
 			wg.Done()
-		}()
+		}(handler)
 	}
 	wg.Wait()
 }
