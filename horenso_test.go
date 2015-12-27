@@ -46,7 +46,7 @@ func TestRun(t *testing.T) {
 		t.Errorf("err should be nil but: %s", err)
 	}
 
-	if r.ExitCode != 0 {
+	if *r.ExitCode != 0 {
 		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
 	}
 
@@ -88,5 +88,8 @@ func TestRun(t *testing.T) {
 	}
 	if nr.EndAt != nil {
 		t.Errorf("EndAt should be nil")
+	}
+	if nr.ExitCode != nil {
+		t.Errorf("ExitCode should be nil")
 	}
 }
