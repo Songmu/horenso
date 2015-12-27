@@ -31,7 +31,7 @@ type Report struct {
 	Stdout      string     `json:"stdout"`
 	Stderr      string     `json:"stderr"`
 	ExitCode    *int       `json:"exitCode,omitempty"`
-	LineReport  string     `json:"lineReport"`
+	Result      string     `json:"result"`
 	Pid         int        `json:"pid"`
 	StartAt     *time.Time `json:"startAt,omitempty"`
 	EndAt       *time.Time `json:"endAt,omitempty"`
@@ -95,9 +95,9 @@ func (o *opts) run(args []string) (Report, error) {
 	r.EndAt = now()
 	ex := wrapcommander.ResolveExitCode(err)
 	r.ExitCode = &ex
-	r.LineReport = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
+	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
 	if *r.ExitCode > 128 {
-		r.LineReport = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
+		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
 	}
 	r.Stdout = bufStdout.String()
 	r.Stderr = bufStderr.String()
@@ -129,7 +129,7 @@ func Run(args []string) int {
 func (o *opts) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
-	r.LineReport = fmt.Sprintf("failed to execute command: %s", errStr)
+	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
 	o.runNoticer(r)
 	o.runReporter(r)
 	return r
