@@ -16,26 +16,31 @@ import (
 )
 
 type opts struct {
-	Reporter  string `long:"reporter" required:"true"`
-	Noticer   string `long:"noticer"`
-	TimeStamp bool   `long:"timestamp"`
+	Reporter  string `short:"r" long:"reporter" required:"true"`
+	Noticer   string `short:"n" long:"noticer"`
+	TimeStamp bool   `short:"T" long:"timestamp"`
+	Tag       string `short:"t" long:"tag"`
 }
 
 type Report struct {
-	Command    string    `json:"command"`
-	Output     string    `json:"output"`
-	Stdout     string    `json:"stdout"`
-	Stderr     string    `json:"stderr"`
-	ExitCode   int       `json:"exitCode"`
-	LineReport string    `json:"lineReport"`
-	Pid        int       `json:"pid"`
-	StartAt    time.Time `json:"startAt"`
-	EndAt      time.Time `json:"endAt"`
+	Command     string    `json:"command"`
+	CommandArgs []string  `json:"commandArgs"`
+	Tag         string    `json:"tag,omitempty"`
+	Output      string    `json:"output"`
+	Stdout      string    `json:"stdout"`
+	Stderr      string    `json:"stderr"`
+	ExitCode    int       `json:"exitCode"`
+	LineReport  string    `json:"lineReport"`
+	Pid         int       `json:"pid"`
+	StartAt     time.Time `json:"startAt"`
+	EndAt       time.Time `json:"endAt"`
 }
 
 func (o *opts) run(args []string) Report {
 	r := Report{
-		Command: shellquote.Join(args...),
+		Command:     shellquote.Join(args...),
+		CommandArgs: args,
+		Tag:         o.Tag,
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 
