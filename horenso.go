@@ -36,7 +36,7 @@ type Report struct {
 	EndAt       *time.Time `json:"endAt,omitempty"`
 }
 
-func (o *opts) run(args []string) Report {
+func (o *opts) run(args []string) (Report, error) {
 	r := Report{
 		Command:     shellquote.Join(args...),
 		CommandArgs: args,
@@ -46,12 +46,12 @@ func (o *opts) run(args []string) Report {
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return o.failReport(r, err)
+		return o.failReport(r, err.Error()), err
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		stdoutPipe.Close()
-		return o.failReport(r, err)
+		return o.failReport(r, err.Error()), err
 	}
 
 	var bufStdout bytes.Buffer
@@ -70,7 +70,7 @@ func (o *opts) run(args []string) Report {
 	if err != nil {
 		stderrPipe.Close()
 		stdoutPipe.Close()
-		return o.failReport(r, err)
+		return o.failReport(r, err.Error()), err
 	}
 	r.Pid = cmd.Process.Pid
 
@@ -103,7 +103,7 @@ func (o *opts) run(args []string) Report {
 	o.runReporter(r)
 	<-nCh
 
-	return r
+	return r, nil
 }
 
 func now() *time.Time {
@@ -117,16 +117,18 @@ func Run(args []string) int {
 	if err != nil {
 		return 2
 	}
-	r := o.run(cmdArgs)
+	r, err := o.run(cmdArgs)
+	if err != nil {
+		return wrapcommander.ResolveExitCode(err)
+	}
 	return r.ExitCode
 }
 
-func (o *opts) failReport(r Report, err error) Report {
+func (o *opts) failReport(r Report, errStr string) Report {
 	r.ExitCode = -1
-	r.LineReport = fmt.Sprintf("failed to execute command: %s", err)
+	r.LineReport = fmt.Sprintf("failed to execute command: %s", errStr)
 	o.runNoticer(r)
 	o.runReporter(r)
-	r.ExitCode = wrapcommander.ResolveExitCode(err)
 	return r
 }
 
