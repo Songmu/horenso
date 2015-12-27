@@ -72,11 +72,11 @@ func TestRun(t *testing.T) {
 
 	rr := parseReport(fname)
 	if !reflect.DeepEqual(r, rr) {
-		t.Errorf("something went wrong")
+		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr)
 	}
 	rr2 := parseReport(fname2)
 	if !reflect.DeepEqual(r, rr2) {
-		t.Errorf("something went wrong")
+		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr2)
 	}
 
 	nr := parseReport(noticeReport)
