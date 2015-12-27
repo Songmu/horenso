@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
+	"sync"
+	"time"
 
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
@@ -15,48 +16,69 @@ import (
 )
 
 type opts struct {
-	Reporter string `long:"reporter" required:"true"`
+	Reporter  []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
+	Noticer   []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
+	TimeStamp bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
+	Tag       string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 }
 
+// Report is represents the result of the command
 type Report struct {
-	Output     string `json:"output"`
-	Command    string `json:"command"`
-	ExitCode   *int   `json:"exitCode,omitempty"`
-	LineReport string `json:"lineReport"`
+	Command     string     `json:"command"`
+	CommandArgs []string   `json:"commandArgs"`
+	Tag         string     `json:"tag,omitempty"`
+	Output      string     `json:"output"`
+	Stdout      string     `json:"stdout"`
+	Stderr      string     `json:"stderr"`
+	ExitCode    *int       `json:"exitCode,omitempty"`
+	Result      string     `json:"result"`
+	Pid         int        `json:"pid"`
+	StartAt     *time.Time `json:"startAt,omitempty"`
+	EndAt       *time.Time `json:"endAt,omitempty"`
 }
 
-func Run(args []string) int {
-	optArgs, cmdArgs := wrapcommander.SeparateArgs(args)
-	o, err := parseArgs(optArgs)
-	if err != nil {
-		return 2
+func (o *opts) run(args []string) (Report, error) {
+	r := Report{
+		Command:     shellquote.Join(args...),
+		CommandArgs: args,
+		Tag:         o.Tag,
 	}
-
-	cmd := exec.Command(cmdArgs[0], cmdArgs[1:]...)
+	cmd := exec.Command(args[0], args[1:]...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		o.failReport(cmdArgs, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error()), err
 	}
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		stdoutPipe.Close()
-		o.failReport(cmdArgs, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error()), err
 	}
 
+	var bufStdout bytes.Buffer
+	var bufStderr bytes.Buffer
 	var bufMerged bytes.Buffer
-	stdoutPipe2 := io.TeeReader(stdoutPipe, &bufMerged)
-	stderrPipe2 := io.TeeReader(stderrPipe, &bufMerged)
 
+	var wtr io.Writer = &bufMerged
+	if o.TimeStamp {
+		wtr = newTimestampWriter(&bufMerged)
+	}
+	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
+	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
+
+	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
 		stderrPipe.Close()
 		stdoutPipe.Close()
-		o.failReport(cmdArgs, err.Error())
-		return wrapcommander.ResolveExitCode(err)
+		return o.failReport(r, err.Error()), err
 	}
+	r.Pid = cmd.Process.Pid
+	done := make(chan struct{})
+	go func() {
+		o.runNoticer(r)
+		done <- struct{}{}
+	}()
 
 	go func() {
 		defer stdoutPipe.Close()
@@ -69,54 +91,97 @@ func Run(args []string) int {
 	}()
 
 	err = cmd.Wait()
-	fmt.Printf("%+v\n", err)
-	exitCode := wrapcommander.ResolveExitCode(err)
+	r.EndAt = now()
+	ex := wrapcommander.ResolveExitCode(err)
+	r.ExitCode = &ex
+	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
+	if *r.ExitCode > 128 {
+		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
+	}
+	r.Stdout = bufStdout.String()
+	r.Stderr = bufStderr.String()
+	r.Output = bufMerged.String()
+	o.runReporter(r)
+	<-done
 
-	lineReport := fmt.Sprintf("command exited with code: %d", exitCode)
-	if exitCode > 128 {
-		lineReport = fmt.Sprintf("command died with signal: %d", exitCode&127)
-	}
-	report := Report{
-		Output:     bufMerged.String(),
-		Command:    shellquote.Join(cmdArgs...),
-		ExitCode:   &exitCode,
-		LineReport: lineReport,
-	}
-	o.runReporter(report)
-	return exitCode
+	return r, nil
 }
 
-func (o *opts) failReport(cmdArgs []string, errStr string) {
-	report := Report{
-		Command:    shellquote.Join(cmdArgs...),
-		LineReport: fmt.Sprintf("failed to execute command: %s", errStr),
-	}
-	o.runReporter(report)
+func now() *time.Time {
+	now := time.Now()
+	return &now
 }
 
-func (o *opts) runReporter(report Report) {
-	args, err := shellquote.Split(o.Reporter)
+func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
+	o := &opts{}
+	p := flags.NewParser(o, flags.Default)
+	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]"
+	rest, err := p.ParseArgs(args)
+	return p, o, rest, err
+}
+
+// Run the horenso
+func Run(args []string) int {
+	p, o, cmdArgs, err := parseArgs(args)
+	if err != nil || len(cmdArgs) < 1 {
+		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
+			p.WriteHelp(os.Stderr)
+		}
+		return 2
+	}
+	r, err := o.run(cmdArgs)
 	if err != nil {
-		log.Print(err)
-		return
+		return wrapcommander.ResolveExitCode(err)
 	}
-	byt, _ := json.Marshal(report)
-	if len(args) < 1 {
-		log.Println("no reporter specified")
-		return
+	return *r.ExitCode
+}
+
+func (o *opts) failReport(r Report, errStr string) Report {
+	fail := -1
+	r.ExitCode = &fail
+	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
+	done := make(chan struct{})
+	go func() {
+		o.runNoticer(r)
+		done <- struct{}{}
+	}()
+	o.runReporter(r)
+	<-done
+	return r
+}
+
+func runHandler(cmdStr string, json string) ([]byte, error) {
+	args, err := shellquote.Split(cmdStr)
+	if err != nil || len(args) < 1 {
+		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
 	}
 	prog := args[0]
-	argv := append(args[1:], string(byt))
+	argv := append(args[1:], json)
 	cmd := exec.Command(prog, argv...)
-	out, err := cmd.CombinedOutput()
-	log.Println(string(out))
-	if err != nil {
-		log.Print(err)
-	}
+	return cmd.CombinedOutput()
 }
 
-func parseArgs(args []string) (*opts, error) {
-	opts := &opts{}
-	_, err := flags.ParseArgs(opts, args)
-	return opts, err
+func runHandlers(handlers []string, json string) {
+	wg := &sync.WaitGroup{}
+	for _, handler := range handlers {
+		wg.Add(1)
+		go func(h string) {
+			runHandler(h, json)
+			wg.Done()
+		}(handler)
+	}
+	wg.Wait()
+}
+
+func (o *opts) runNoticer(r Report) {
+	if len(o.Noticer) < 1 {
+		return
+	}
+	json, _ := json.Marshal(r)
+	runHandlers(o.Noticer, string(json))
+}
+
+func (o *opts) runReporter(r Report) {
+	json, _ := json.Marshal(r)
+	runHandlers(o.Reporter, string(json))
 }
