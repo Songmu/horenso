@@ -83,7 +83,12 @@ func (o *opts) run(args []string) Report {
 		defer stderrPipe.Close()
 		io.Copy(os.Stderr, stderrPipe2)
 	}()
-	o.runNoticer(r)
+
+	nCh := make(chan struct{})
+	go func() {
+		o.runNoticer(r)
+		nCh <- struct{}{}
+	}()
 
 	err = cmd.Wait()
 	r.EndAt = time.Now()
@@ -96,6 +101,7 @@ func (o *opts) run(args []string) Report {
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
 	o.runReporter(r)
+	<-nCh
 
 	return r
 }
