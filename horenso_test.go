@@ -106,7 +106,5 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Stderr == r2.Stderr &&
 		*r1.ExitCode == *r2.ExitCode &&
 		r1.Result == r2.Result &&
-		r1.Pid == r2.Pid &&
-		*r1.StartAt == *r2.StartAt &&
-		*r2.EndAt == *r2.EndAt
+		r1.Pid == r2.Pid
 }
