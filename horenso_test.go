@@ -71,11 +71,11 @@ func TestRun(t *testing.T) {
 	}
 
 	rr := parseReport(fname)
-	if !reflect.DeepEqual(r, rr) {
+	if !deepEqual(r, rr) {
 		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr)
 	}
 	rr2 := parseReport(fname2)
-	if !reflect.DeepEqual(r, rr2) {
+	if !deepEqual(r, rr2) {
 		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr2)
 	}
 
@@ -95,4 +95,18 @@ func TestRun(t *testing.T) {
 	if nr.ExitCode != nil {
 		t.Errorf("ExitCode should be nil")
 	}
+}
+
+func deepEqual(r1, r2 Report) bool {
+	return r1.Command == r2.Command &&
+		reflect.DeepEqual(r1.CommandArgs, r2.CommandArgs) &&
+		r1.Tag == r2.Tag &&
+		r1.Output == r2.Output &&
+		r1.Stdout == r2.Stdout &&
+		r1.Stderr == r2.Stderr &&
+		*r1.ExitCode == *r2.ExitCode &&
+		r1.Result == r2.Result &&
+		r1.Pid == r2.Pid &&
+		*r1.StartAt == *r2.StartAt &&
+		*r2.EndAt == *r2.EndAt
 }
