@@ -11,7 +11,7 @@ horenso
 
 ## Description
 
-Command wrapper for reporting the result. It is useful cron jobs.
+Command wrapper for reporting the result. It is useful for cron jobs.
 
 ## Installation
 
