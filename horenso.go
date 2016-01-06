@@ -33,7 +33,7 @@ type Report struct {
 	ExitCode    *int       `json:"exitCode,omitempty"`
 	Result      string     `json:"result"`
 	Hostname    string     `json:"hostname"`
-	Pid         int        `json:"pid"`
+	Pid         *int       `json:"pid,omitempty"`
 	StartAt     *time.Time `json:"startAt,omitempty"`
 	EndAt       *time.Time `json:"endAt,omitempty"`
 	SystemTime  *float64   `json:"systemTime,omitempty"`
@@ -78,7 +78,9 @@ func (o *opts) run(args []string) (Report, error) {
 		stdoutPipe.Close()
 		return o.failReport(r, err.Error()), err
 	}
-	r.Pid = cmd.Process.Pid
+	if cmd.Process != nil {
+		r.Pid = &cmd.Process.Pid
+	}
 	done := make(chan struct{})
 	go func() {
 		o.runNoticer(r)
