@@ -89,7 +89,8 @@ The reporters and noticers are accept one argument of JSON which reports command
   "result": "command exited with code: 0",
   "pid": 95030,
   "startAt": "2015-12-28T00:37:10.494282399+09:00",
-  "endAt": "2015-12-28T00:37:10.546466379+09:00"
+  "endAt": "2015-12-28T00:37:10.546466379+09:00",
+  "hostname": "webserver.mydomain.com"
 }
 ```
 
