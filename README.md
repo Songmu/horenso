@@ -1,5 +1,5 @@
-horenso
-=======
+horenso(報・連・相)
+===================
 
 [![Build Status](https://travis-ci.org/Songmu/horenso.png?branch=master)][travis]
 [![Coverage Status](https://coveralls.io/repos/Songmu/horenso/badge.png?branch=master)][coveralls]
@@ -13,9 +13,13 @@ horenso
 
 Command wrapper for reporting the result. It is useful for cron jobs.
 
+**THE SOFTWARE IS IT'S IN ALPHA QUALITY. IT MAY CHANGE THE API WITHOUT NOTICE.**
+
 ## Installation
 
     % go get github.com/Songmu/horenso/cmd/horenso
+
+Built binaries are available on gihub releases soon!
 
 ## Synopsis
 
