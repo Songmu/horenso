@@ -153,18 +153,19 @@ func (o *opts) failReport(r Report, errStr string) Report {
 	return r
 }
 
-func runHandler(cmdStr string, json string) ([]byte, error) {
+func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
 		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
 	}
-	prog := args[0]
-	argv := append(args[1:], json)
-	cmd := exec.Command(prog, argv...)
+	cmd := exec.Command(args[0], args[1:]...)
+	stdinPipe, _ := cmd.StdinPipe()
+	stdinPipe.Write(json)
+	stdinPipe.Close()
 	return cmd.CombinedOutput()
 }
 
-func runHandlers(handlers []string, json string) {
+func runHandlers(handlers []string, json []byte) {
 	wg := &sync.WaitGroup{}
 	for _, handler := range handlers {
 		wg.Add(1)
@@ -181,10 +182,10 @@ func (o *opts) runNoticer(r Report) {
 		return
 	}
 	json, _ := json.Marshal(r)
-	runHandlers(o.Noticer, string(json))
+	runHandlers(o.Noticer, json)
 }
 
 func (o *opts) runReporter(r Report) {
 	json, _ := json.Marshal(r)
-	runHandlers(o.Reporter, string(json))
+	runHandlers(o.Reporter, json)
 }
