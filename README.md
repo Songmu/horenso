@@ -32,11 +32,36 @@ Usage:
   horenso --reporter /path/to/reporter.pl -- /path/to/job [...]
 
 Application Options:
-  -r, --reporter=/path/to/reporter.pl    handler for reporting the result of the job
-  -n, --noticer=/path/to/noticer.rb      handler for noticing the start of the job
-  -T, --timestamp                        add timestamp to merged output
-  -t, --tag=job-name                     tag of the job
+  -r, --reporter=/path/to/reporter.pl     handler for reporting the result of the job
+  -n, --noticer='ruby/path/to/noticer.rb' handler for noticing the start of the job
+  -T, --timestamp                         add timestamp to merged output
+  -t, --tag=job-name                      tag of the job
 ```
+
+Handlers are should be an executable or command line string. You can specify multiple reporters and noticers.
+In this case, they are executed concurrently.
+
+## Usage
+
+Normally you can use `horenso` with a wrapper shell script like following.
+
+```shell
+#!/bin/bash
+/path/to/horenso \
+  -n /path/to/noticer.py         \
+  -r /path/to/reporter.pl        \
+  -r 'ruby /path/to/reporter.rb' \
+  -- "$@"
+```
+
+And specify this `wrapper.sh` in the crontab like following.
+
+```
+3 4 * * * /path/to/wrapper.sh /path/to/job --args...
+```
+
+If you want to change reporting way, you just have to change reporter script. You have no risk to crash
+wrapper shell.
 
 ## Execution Seqence
 
