@@ -6,10 +6,11 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 3 {
+	if len(os.Args) < 2 {
 		return
 	}
 	file := os.Args[1]
-	json := os.Args[2]
+	bytes, _ := ioutil.ReadAll(os.Stdin)
+	json := string(bytes)
 	ioutil.WriteFile(file, []byte(json), os.ModePerm)
 }
