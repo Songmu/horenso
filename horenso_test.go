@@ -70,9 +70,9 @@ func TestRun(t *testing.T) {
 	if r.EndAt == nil {
 		t.Errorf("EtartAt shouldn't be nil")
 	}
-	expected_hostname, _ := os.Hostname()
-	if r.Hostname != expected_hostname {
-		t.Errorf("Hostname should be %s but: %s", expected_hostname, r.Hostname)
+	expectedHostname, _ := os.Hostname()
+	if r.Hostname != expectedHostname {
+		t.Errorf("Hostname should be %s but: %s", expectedHostname, r.Hostname)
 	}
 
 	rr := parseReport(fname)
