@@ -35,13 +35,16 @@ type Report struct {
 	Pid         int        `json:"pid"`
 	StartAt     *time.Time `json:"startAt,omitempty"`
 	EndAt       *time.Time `json:"endAt,omitempty"`
+	Hostname    string     `json:"hostname"`
 }
 
 func (o *opts) run(args []string) (Report, error) {
+	hostname, _ := os.Hostname()
 	r := Report{
 		Command:     shellquote.Join(args...),
 		CommandArgs: args,
 		Tag:         o.Tag,
+		Hostname:    hostname,
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 

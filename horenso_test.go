@@ -3,6 +3,7 @@ package horenso
 import (
 	"encoding/json"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -69,6 +70,10 @@ func TestRun(t *testing.T) {
 	if r.EndAt == nil {
 		t.Errorf("EtartAt shouldn't be nil")
 	}
+	expected_hostname, _ := os.Hostname()
+	if r.Hostname != expected_hostname {
+		t.Errorf("Hostname should be %s but: %s", expected_hostname, r.Hostname)
+	}
 
 	rr := parseReport(fname)
 	if !deepEqual(r, rr) {
@@ -95,6 +100,9 @@ func TestRun(t *testing.T) {
 	if nr.ExitCode != nil {
 		t.Errorf("ExitCode should be nil")
 	}
+	if nr.Hostname != r.Hostname {
+		t.Errorf("something went wrong")
+	}
 }
 
 func deepEqual(r1, r2 Report) bool {
@@ -106,5 +114,6 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Stderr == r2.Stderr &&
 		*r1.ExitCode == *r2.ExitCode &&
 		r1.Result == r2.Result &&
-		r1.Pid == r2.Pid
+		r1.Pid == r2.Pid &&
+		r1.Hostname == r2.Hostname
 }
