@@ -32,10 +32,12 @@ type Report struct {
 	Stderr      string     `json:"stderr"`
 	ExitCode    *int       `json:"exitCode,omitempty"`
 	Result      string     `json:"result"`
-	Pid         int        `json:"pid"`
+	Hostname    string     `json:"hostname"`
+	Pid         *int       `json:"pid,omitempty"`
 	StartAt     *time.Time `json:"startAt,omitempty"`
 	EndAt       *time.Time `json:"endAt,omitempty"`
-	Hostname    string     `json:"hostname"`
+	SystemTime  *float64   `json:"systemTime,omitempty"`
+	UserTime    *float64   `json:"userTime,omitempty"`
 }
 
 func (o *opts) run(args []string) (Report, error) {
@@ -76,7 +78,9 @@ func (o *opts) run(args []string) (Report, error) {
 		stdoutPipe.Close()
 		return o.failReport(r, err.Error()), err
 	}
-	r.Pid = cmd.Process.Pid
+	if cmd.Process != nil {
+		r.Pid = &cmd.Process.Pid
+	}
 	done := make(chan struct{})
 	go func() {
 		o.runNoticer(r)
@@ -104,6 +108,14 @@ func (o *opts) run(args []string) (Report, error) {
 	r.Stdout = bufStdout.String()
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
+	if p := cmd.ProcessState; p != nil {
+		durPtr := func(t time.Duration) *float64 {
+			f := float64(t) / float64(time.Second)
+			return &f
+		}
+		r.UserTime = durPtr(p.UserTime())
+		r.SystemTime = durPtr(p.SystemTime())
+	}
 	o.runReporter(r)
 	<-done
 
