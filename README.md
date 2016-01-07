@@ -63,7 +63,7 @@ And specify this `wrapper.sh` in the crontab like following.
 If you want to change reporting way, you just have to change reporter script. You have no risk to crash
 wrapper shell.
 
-## Execution Seqence
+## Execution Sequence
 
 1. Start the command
 2. [optional] Run the noticers
