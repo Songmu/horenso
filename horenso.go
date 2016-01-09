@@ -15,6 +15,8 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
+const version = "0.0.1"
+
 type opts struct {
 	Reporter  []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
 	Noticer   []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
@@ -130,7 +132,7 @@ func now() *time.Time {
 func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
 	o := &opts{}
 	p := flags.NewParser(o, flags.Default)
-	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]"
+	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]\n\nVerion: " + version
 	rest, err := p.ParseArgs(args)
 	return p, o, rest, err
 }
