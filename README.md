@@ -19,7 +19,8 @@ Command wrapper for reporting the result. It is useful for cron jobs.
 
     % go get github.com/Songmu/horenso/cmd/horenso
 
-Built binaries are available on gihub releases soon!
+Built binaries are available on gihub releases.
+<https://github.com/Songmu/horenso/releases>
 
 ## Synopsis
 
