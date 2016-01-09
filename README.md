@@ -13,8 +13,6 @@ horenso(報・連・相)
 
 Command wrapper for reporting the result. It is useful for cron jobs.
 
-**THE SOFTWARE IS IT'S IN ALPHA QUALITY. IT MAY CHANGE THE API WITHOUT NOTICE.**
-
 ## Installation
 
     % go get github.com/Songmu/horenso/cmd/horenso
