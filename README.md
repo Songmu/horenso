@@ -91,7 +91,8 @@ The reporters and noticers are accept a result JSON via STDIN that reports comma
   "startAt": "2015-12-28T00:37:10.494282399+09:00",
   "endAt": "2015-12-28T00:37:10.546466379+09:00",
   "hostname": "webserver.example.com",
-  "systemTime": 0.000123
+  "systemTime": 0.034632,
+  "userTime": 0.026523
 }
 ```
 
