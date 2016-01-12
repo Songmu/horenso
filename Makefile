@@ -1,7 +1,7 @@
 BUILD_OS_TARGETS = "linux darwin freebsd windows"
 
 test: deps
-	go test ./...
+	go test
 
 deps:
 	go get -d -v -t ./...
