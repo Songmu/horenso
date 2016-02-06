@@ -89,16 +89,26 @@ func (o *opts) run(args []string) (Report, error) {
 		done <- struct{}{}
 	}()
 
+	outDone := make(chan struct{})
 	go func() {
-		defer stdoutPipe.Close()
+		defer func() {
+			stdoutPipe.Close()
+			outDone <- struct{}{}
+		}()
 		io.Copy(os.Stdout, stdoutPipe2)
 	}()
 
+	errDone := make(chan struct{})
 	go func() {
-		defer stderrPipe.Close()
+		defer func() {
+			stderrPipe.Close()
+			errDone <- struct{}{}
+		}()
 		io.Copy(os.Stderr, stderrPipe2)
 	}()
 
+	<-outDone
+	<-errDone
 	err = cmd.Wait()
 	r.EndAt = now()
 	ex := wrapcommander.ResolveExitCode(err)
