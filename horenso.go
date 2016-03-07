@@ -142,7 +142,7 @@ func now() *time.Time {
 func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
 	o := &opts{}
 	p := flags.NewParser(o, flags.Default)
-	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]\n\nVerion: " + version
+	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]\n\nVersion: " + version
 	rest, err := p.ParseArgs(args)
 	return p, o, rest, err
 }
