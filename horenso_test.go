@@ -105,6 +105,84 @@ func TestRun(t *testing.T) {
 	}
 }
 
+func TestRunHugeOutput(t *testing.T) {
+	noticeReport := temp()
+	fname := temp()
+	fname2 := temp()
+	_, o, cmdArgs, err := parseArgs([]string{
+		"--noticer",
+		"go run _testdata/reporter.go " + noticeReport,
+		"-n", "invalid",
+		"--reporter",
+		"go run _testdata/reporter.go " + fname,
+		"-r",
+		"go run _testdata/reporter.go " + fname2,
+		"--",
+		"go", "run", "_testdata/run_hugeoutput.go",
+	})
+	if err != nil {
+		t.Errorf("err should be nil but: %s", err)
+	}
+	r, err := o.run(cmdArgs)
+	if err != nil {
+		t.Errorf("err should be nil but: %s", err)
+	}
+
+	if *r.ExitCode != 0 {
+		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
+	}
+
+	expect := 64*1024 + 1
+	if len(r.Output) != expect {
+		t.Errorf("output should be %d bytes but: %d bytes", expect, len(r.Output))
+	}
+	if len(r.Stdout) != expect {
+		t.Errorf("output should be %d bytes but: %d bytes", expect, len(r.Stdout))
+	}
+	if r.Stderr != "" {
+		t.Errorf("output should be empty but: %s", r.Stderr)
+	}
+	if r.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
+	}
+	if r.EndAt == nil {
+		t.Errorf("EtartAt shouldn't be nil")
+	}
+	expectedHostname, _ := os.Hostname()
+	if r.Hostname != expectedHostname {
+		t.Errorf("Hostname should be %s but: %s", expectedHostname, r.Hostname)
+	}
+
+	rr := parseReport(fname)
+	if !deepEqual(r, rr) {
+		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr)
+	}
+	rr2 := parseReport(fname2)
+	if !deepEqual(r, rr2) {
+		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr2)
+	}
+
+	nr := parseReport(noticeReport)
+	if *nr.Pid != *r.Pid {
+		t.Errorf("something went wrong")
+	}
+	if nr.Output != "" {
+		t.Errorf("something went wrong")
+	}
+	if nr.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
+	}
+	if nr.EndAt != nil {
+		t.Errorf("EndAt should be nil")
+	}
+	if nr.ExitCode != nil {
+		t.Errorf("ExitCode should be nil")
+	}
+	if nr.Hostname != r.Hostname {
+		t.Errorf("something went wrong")
+	}
+}
+
 func deepEqual(r1, r2 Report) bool {
 	return r1.Command == r2.Command &&
 		reflect.DeepEqual(r1.CommandArgs, r2.CommandArgs) &&
