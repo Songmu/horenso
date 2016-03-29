@@ -184,9 +184,17 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 	stdinPipe, _ := cmd.StdinPipe()
+	var b bytes.Buffer
+	cmd.Stdout = &b
+	cmd.Stderr = &b
+	if err := cmd.Start(); err != nil {
+		stdinPipe.Close()
+		return b.Bytes(), err
+	}
 	stdinPipe.Write(json)
 	stdinPipe.Close()
-	return cmd.CombinedOutput()
+	err = cmd.Wait()
+	return b.Bytes(), err
 }
 
 func runHandlers(handlers []string, json []byte) {
