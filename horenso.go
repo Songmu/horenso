@@ -211,16 +211,19 @@ func (es errors) Error() string {
 func runHandlers(handlers []string, json []byte, verbose bool) error {
 	var wg sync.WaitGroup
 	var es errors
+	var m sync.Mutex
 	for _, handler := range handlers {
 		wg.Add(1)
 		go func(h string) {
 			b, err := runHandler(h, json)
 			if err != nil {
 				err := fmt.Errorf("%s: %s", err, string(b))
-				es = append(es, err)
 				if verbose {
 					fmt.Fprintln(os.Stderr, err)
 				}
+				m.Lock()
+				es = append(es, err)
+				m.Unlock()
 			}
 			wg.Done()
 		}(handler)
