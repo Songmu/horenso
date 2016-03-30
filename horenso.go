@@ -22,6 +22,7 @@ type opts struct {
 	Noticer   []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
 	TimeStamp bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag       string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
+	Verbose   bool     `short:"v" long:"verbose" description:"verbose output"`
 }
 
 // Report is represents the result of the command
@@ -89,26 +90,26 @@ func (o *opts) run(args []string) (Report, error) {
 		done <- struct{}{}
 	}()
 
-	outDone := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
 		defer func() {
 			stdoutPipe.Close()
-			outDone <- struct{}{}
+			wg.Done()
 		}()
 		io.Copy(os.Stdout, stdoutPipe2)
 	}()
 
-	errDone := make(chan struct{})
+	wg.Add(1)
 	go func() {
 		defer func() {
 			stderrPipe.Close()
-			errDone <- struct{}{}
+			wg.Done()
 		}()
 		io.Copy(os.Stderr, stderrPipe2)
 	}()
 
-	<-outDone
-	<-errDone
+	wg.Wait()
 	err = cmd.Wait()
 	r.EndAt = now()
 	ex := wrapcommander.ResolveExitCode(err)
@@ -197,12 +198,15 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	return b.Bytes(), err
 }
 
-func runHandlers(handlers []string, json []byte) {
-	wg := &sync.WaitGroup{}
+func runHandlers(handlers []string, json []byte, verbose bool) {
+	var wg sync.WaitGroup
 	for _, handler := range handlers {
 		wg.Add(1)
 		go func(h string) {
-			runHandler(h, json)
+			b, err := runHandler(h, json)
+			if err != nil && verbose {
+				fmt.Fprintf(os.Stderr, "%s: %s\n", err, string(b))
+			}
 			wg.Done()
 		}(handler)
 	}
@@ -214,10 +218,10 @@ func (o *opts) runNoticer(r Report) {
 		return
 	}
 	json, _ := json.Marshal(r)
-	runHandlers(o.Noticer, json)
+	runHandlers(o.Noticer, json, o.Verbose)
 }
 
 func (o *opts) runReporter(r Report) {
 	json, _ := json.Marshal(r)
-	runHandlers(o.Reporter, json)
+	runHandlers(o.Reporter, json, o.Verbose)
 }
