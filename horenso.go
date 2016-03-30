@@ -129,10 +129,10 @@ func (o *opts) run(args []string) (Report, error) {
 		r.UserTime = durPtr(p.UserTime())
 		r.SystemTime = durPtr(p.SystemTime())
 	}
-	o.runReporter(r)
+	err = o.runReporter(r)
 	<-done
 
-	return r, nil
+	return r, err
 }
 
 func now() *time.Time {
@@ -198,30 +198,46 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	return b.Bytes(), err
 }
 
-func runHandlers(handlers []string, json []byte, verbose bool) {
+type errors []error
+
+func (es errors) Error() string {
+	var buf bytes.Buffer
+	for _, e := range es {
+		fmt.Fprintln(&buf, e)
+	}
+	return buf.String()
+}
+
+func runHandlers(handlers []string, json []byte, verbose bool) error {
 	var wg sync.WaitGroup
+	var es errors
 	for _, handler := range handlers {
 		wg.Add(1)
 		go func(h string) {
 			b, err := runHandler(h, json)
-			if err != nil && verbose {
-				fmt.Fprintf(os.Stderr, "%s: %s\n", err, string(b))
+			if err != nil {
+				err := fmt.Errorf("%s: %s", err, string(b))
+				es = append(es, err)
+				if verbose {
+					fmt.Fprintln(os.Stderr, err)
+				}
 			}
 			wg.Done()
 		}(handler)
 	}
 	wg.Wait()
+	return es
 }
 
-func (o *opts) runNoticer(r Report) {
+func (o *opts) runNoticer(r Report) error {
 	if len(o.Noticer) < 1 {
-		return
+		return nil
 	}
 	json, _ := json.Marshal(r)
-	runHandlers(o.Noticer, json, o.Verbose)
+	return runHandlers(o.Noticer, json, o.Verbose)
 }
 
-func (o *opts) runReporter(r Report) {
+func (o *opts) runReporter(r Report) error {
 	json, _ := json.Marshal(r)
-	runHandlers(o.Reporter, json, o.Verbose)
+	return runHandlers(o.Reporter, json, o.Verbose)
 }
