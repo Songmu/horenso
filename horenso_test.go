@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -180,6 +181,27 @@ func TestRunHugeOutput(t *testing.T) {
 	}
 	if nr.Hostname != r.Hostname {
 		t.Errorf("something went wrong")
+	}
+}
+
+func TestRunVerbose(t *testing.T) {
+	_, o, cmdArgs, err := parseArgs([]string{
+		"-v",
+		"-r",
+		"go run _testdata/reporter_notfound.go",
+		"--",
+		"go", "run", "_testdata/run.go",
+	})
+	if err != nil {
+		t.Errorf("err should be nil but: %s", err)
+	}
+	r, err := o.run(cmdArgs)
+	if err == nil {
+		t.Errorf("should be error")
+	}
+
+	if !strings.Contains(err.Error(), "_testdata/reporter_notfound.go") {
+		t.Errorf("error output should contain reason that can't start the command with path but: %s", r.Output)
 	}
 }
 
