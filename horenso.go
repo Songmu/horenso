@@ -15,7 +15,7 @@ import (
 	"github.com/kballard/go-shellquote"
 )
 
-const version = "0.0.1"
+const version = "0.0.2"
 
 type opts struct {
 	Reporter  []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
