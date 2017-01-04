@@ -1,8 +1,11 @@
 language: go
 go:
-- 1.5
+  - 1.5
+  - 1.6
+  - 1.7
+  - tip
 script:
-- make lint
-- make test
+  - make lint
+  - make test
 after_script:
-- make cover
+  - make cover
