@@ -193,5 +193,6 @@ func deepEqual(r1, r2 Report) bool {
 		*r1.ExitCode == *r2.ExitCode &&
 		r1.Result == r2.Result &&
 		*r1.Pid == *r2.Pid &&
-		r1.Hostname == r2.Hostname
+		r1.Hostname == r2.Hostname &&
+		r1.Signaled == r2.Signaled
 }

@@ -32,6 +32,7 @@ type Report struct {
 	Stdout      string     `json:"stdout"`
 	Stderr      string     `json:"stderr"`
 	ExitCode    *int       `json:"exitCode,omitempty"`
+	Signaled    bool       `json:"signaled"`
 	Result      string     `json:"result"`
 	Hostname    string     `json:"hostname"`
 	Pid         *int       `json:"pid,omitempty"`
@@ -112,8 +113,14 @@ func (o *opts) run(args []string) (Report, error) {
 	r.EndAt = now()
 	ex := wrapcommander.ResolveExitCode(err)
 	r.ExitCode = &ex
-	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
 	if *r.ExitCode > 128 {
+		w, ok := wrapcommander.ErrorToWaitStatus(err)
+		if ok {
+			r.Signaled = w.Signaled()
+		}
+	}
+	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
+	if r.Signaled {
 		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
 	}
 	r.Stdout = bufStdout.String()
