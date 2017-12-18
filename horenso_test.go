@@ -33,14 +33,14 @@ func TestRun(t *testing.T) {
 	fname2 := temp()
 	_, o, cmdArgs, err := parseArgs([]string{
 		"--noticer",
-		"go run _testdata/reporter.go " + noticeReport,
+		"go run testdata/reporter.go " + noticeReport,
 		"-n", "invalid",
 		"--reporter",
-		"go run _testdata/reporter.go " + fname,
+		"go run testdata/reporter.go " + fname,
 		"-r",
-		"go run _testdata/reporter.go " + fname2,
+		"go run testdata/reporter.go " + fname2,
 		"--",
-		"go", "run", "_testdata/run.go",
+		"go", "run", "testdata/run.go",
 	})
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
@@ -111,14 +111,14 @@ func TestRunHugeOutput(t *testing.T) {
 	fname2 := temp()
 	_, o, cmdArgs, err := parseArgs([]string{
 		"--noticer",
-		"go run _testdata/reporter.go " + noticeReport,
+		"go run testdata/reporter.go " + noticeReport,
 		"-n", "invalid",
 		"--reporter",
-		"go run _testdata/reporter.go " + fname,
+		"go run testdata/reporter.go " + fname,
 		"-r",
-		"go run _testdata/reporter.go " + fname2,
+		"go run testdata/reporter.go " + fname2,
 		"--",
-		"go", "run", "_testdata/run_hugeoutput.go",
+		"go", "run", "testdata/run_hugeoutput.go",
 	})
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
