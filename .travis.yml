@@ -1,8 +1,8 @@
 language: go
 go:
-- 1.5
+- 1.9
 script:
-- make lint
-- make test
+  - make lint
+  - make test
 after_script:
-- make cover
+  - make cover

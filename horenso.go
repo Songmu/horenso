@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"sync"
 	"time"
 
@@ -14,8 +15,6 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/kballard/go-shellquote"
 )
-
-const version = "0.0.2"
 
 type opts struct {
 	Reporter  []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
@@ -142,7 +141,9 @@ func now() *time.Time {
 func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
 	o := &opts{}
 	p := flags.NewParser(o, flags.Default)
-	p.Usage = "--reporter /path/to/reporter.pl -- /path/to/job [...]\n\nVersion: " + version
+	p.Usage = fmt.Sprintf(`--reporter /path/to/reporter.pl -- /path/to/job [...]
+
+Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 	rest, err := p.ParseArgs(args)
 	return p, o, rest, err
 }
