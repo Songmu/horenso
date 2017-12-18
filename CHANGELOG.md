@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.1.0](https://github.com/Songmu/horenso/compare/v0.0.2...v0.1.0) (2017-12-18)
+
+* add `signaled` field to Report [#15](https://github.com/Songmu/horenso/pull/15) ([Songmu](https://github.com/Songmu))
+* adjust releng [#14](https://github.com/Songmu/horenso/pull/14) ([Songmu](https://github.com/Songmu))
+* Add Go 1.6, 1.7, and tip to .travis.yml [#13](https://github.com/Songmu/horenso/pull/13) ([achiku](https://github.com/achiku))
+
 ## [v0.0.2](https://github.com/Songmu/horenso/compare/v0.0.1...v0.0.2) (2016-03-31)
 
 * cmd.Start() before stdinPipe.Write() [#11](https://github.com/Songmu/horenso/pull/11) ([fujiwara](https://github.com/fujiwara))
