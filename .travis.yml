@@ -1,7 +1,6 @@
 language: go
 go:
-  - 1.7
-  - tip
+- 1.9
 script:
   - make lint
   - make test
