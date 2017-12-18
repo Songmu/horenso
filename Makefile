@@ -34,4 +34,8 @@ crossbuild: devel-deps
 	  -os=linux,darwin,freebsd -arch=386,amd64 -d=./dist \
 	  -tasks=clean-destination,xc,archive,rmbin
 
-.PHONY: test deps lint cover
+release: devel-deps
+	_tools/releng
+	_tools/upload_artifacts
+
+.PHONY: deps devel-deps test lint cover build crossbuild release
