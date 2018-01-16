@@ -5,7 +5,7 @@
   branch = "master"
   name = "github.com/Songmu/wrapcommander"
   packages = ["."]
-  revision = "da6f7e02efc3386a21980967d689f6385c4625c9"
+  revision = "c228fd70413bba4c4b70d0bd78d4665dc6ec252b"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
