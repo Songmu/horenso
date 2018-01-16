@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.2.0](https://github.com/Songmu/horenso/compare/v0.1.0...v0.2.0) (2018-01-16)
+
+* update deps (wrapcommander) [#17](https://github.com/Songmu/horenso/pull/17) ([Songmu](https://github.com/Songmu))
+* add override command status option [#16](https://github.com/Songmu/horenso/pull/16) ([dozen](https://github.com/dozen))
+
 ## [v0.1.0](https://github.com/Songmu/horenso/compare/v0.0.2...v0.1.0) (2017-12-18)
 
 * add `signaled` field to Report [#15](https://github.com/Songmu/horenso/pull/15) ([Songmu](https://github.com/Songmu))
