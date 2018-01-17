@@ -35,6 +35,7 @@ Application Options:
   -n, --noticer='ruby/path/to/noticer.rb' handler for noticing the start of the job
   -T, --timestamp                         add timestamp to merged output
   -t, --tag=job-name                      tag of the job
+  -o, --override-status                   override command exit status, always exit 0
 ```
 
 Handlers are should be an executable or command line string. You can specify multiple reporters and noticers.
