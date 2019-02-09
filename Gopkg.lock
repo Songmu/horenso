@@ -3,25 +3,44 @@
 
 [[projects]]
   branch = "master"
+  digest = "1:af833db11a4e10867c42610868149172143faa7b5d286439a844ca43a7a18bba"
   name = "github.com/Songmu/wrapcommander"
   packages = ["."]
-  revision = "c228fd70413bba4c4b70d0bd78d4665dc6ec252b"
+  pruneopts = "UT"
+  revision = "6edabfc62ab9d8924d9609276391f8966eb95194"
 
 [[projects]]
+  digest = "1:a2cff208d4759f6ba1b1cd228587b0a1869f95f22542ec9cd17fff64430113c7"
   name = "github.com/jessevdk/go-flags"
   packages = ["."]
-  revision = "96dc06278ce32a0e9d957d590bb987c81ee66407"
-  version = "v1.3.0"
+  pruneopts = "UT"
+  revision = "c6ca198ec95c841fdb89fc0de7496fed11ab854e"
+  version = "v1.4.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:400e113a367b511b9b09ca642ee11d9885485a93838526d697033af334a2fdde"
   name = "github.com/kballard/go-shellquote"
   packages = ["."]
-  revision = "cd60e84ee657ff3dc51de0b4f55dd299a3e136f2"
+  pruneopts = "UT"
+  revision = "95032a82bc518f77982ea72343cc1ade730072f0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:b521f10a2d8fa85c04a8ef4e62f2d1e14d303599a55d64dabf9f5a02f84d35eb"
+  name = "golang.org/x/sync"
+  packages = ["errgroup"]
+  pruneopts = "UT"
+  revision = "37e7f081c4d4c64e13b10787722085407fe5d15f"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "239ff99cc6be88160e92353b5168ce8018260eb6f1a031775736cbc0eba2bc39"
+  input-imports = [
+    "github.com/Songmu/wrapcommander",
+    "github.com/jessevdk/go-flags",
+    "github.com/kballard/go-shellquote",
+    "golang.org/x/sync/errgroup",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
