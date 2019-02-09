@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
@@ -22,6 +23,7 @@ type horenso struct {
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
+	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output"`
 }
 
 // Report is represents the result of the command
@@ -135,17 +137,20 @@ func now() *time.Time {
 }
 
 func parseArgs(args []string) (*flags.Parser, *horenso, []string, error) {
-	o := &horenso{}
-	p := flags.NewParser(o, flags.Default)
+	ho := &horenso{}
+	p := flags.NewParser(ho, flags.Default)
 	p.Usage = fmt.Sprintf(`--reporter /path/to/reporter.pl -- /path/to/job [...]
 
 Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 	rest, err := p.ParseArgs(args)
-	return p, o, rest, err
+	return p, ho, rest, err
 }
 
 // Run the horenso
 func Run(args []string) int {
+	log.SetPrefix("[horenso] ")
+	log.SetFlags(0)
+
 	p, ho, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
