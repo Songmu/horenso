@@ -16,7 +16,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
-type opts struct {
+type horenso struct {
 	Reporter       []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
 	Noticer        []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
@@ -43,25 +43,25 @@ type Report struct {
 	UserTime    *float64   `json:"userTime,omitempty"`
 }
 
-func (o *opts) run(args []string) (Report, error) {
+func (ho *horenso) run(args []string) (Report, error) {
 	hostname, _ := os.Hostname()
 	r := Report{
 		Command:     shellquote.Join(args...),
 		CommandArgs: args,
-		Tag:         o.Tag,
+		Tag:         ho.Tag,
 		Hostname:    hostname,
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
-		return o.failReport(r, err.Error()), err
+		return ho.failReport(r, err.Error()), err
 	}
 	defer stdoutPipe.Close()
 
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		return o.failReport(r, err.Error()), err
+		return ho.failReport(r, err.Error()), err
 	}
 	defer stderrPipe.Close()
 
@@ -70,7 +70,7 @@ func (o *opts) run(args []string) (Report, error) {
 	var bufMerged bytes.Buffer
 
 	var wtr io.Writer = &bufMerged
-	if o.TimeStamp {
+	if ho.TimeStamp {
 		wtr = newTimestampWriter(&bufMerged)
 	}
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
@@ -79,14 +79,14 @@ func (o *opts) run(args []string) (Report, error) {
 	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
-		return o.failReport(r, err.Error()), err
+		return ho.failReport(r, err.Error()), err
 	}
 	if cmd.Process != nil {
 		r.Pid = &cmd.Process.Pid
 	}
 	done := make(chan error)
 	go func() {
-		done <- o.runNoticer(r)
+		done <- ho.runNoticer(r)
 	}()
 
 	eg := &errgroup.Group{}
@@ -123,7 +123,7 @@ func (o *opts) run(args []string) (Report, error) {
 		r.UserTime = durPtr(p.UserTime())
 		r.SystemTime = durPtr(p.SystemTime())
 	}
-	o.runReporter(r)
+	ho.runReporter(r)
 	<-done
 
 	return r, nil
@@ -134,8 +134,8 @@ func now() *time.Time {
 	return &now
 }
 
-func parseArgs(args []string) (*flags.Parser, *opts, []string, error) {
-	o := &opts{}
+func parseArgs(args []string) (*flags.Parser, *horenso, []string, error) {
+	o := &horenso{}
 	p := flags.NewParser(o, flags.Default)
 	p.Usage = fmt.Sprintf(`--reporter /path/to/reporter.pl -- /path/to/job [...]
 
@@ -146,32 +146,32 @@ Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 
 // Run the horenso
 func Run(args []string) int {
-	p, o, cmdArgs, err := parseArgs(args)
+	p, ho, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
 			p.WriteHelp(os.Stderr)
 		}
 		return 2
 	}
-	r, err := o.run(cmdArgs)
+	r, err := ho.run(cmdArgs)
 	if err != nil {
 		return wrapcommander.ResolveExitCode(err)
 	}
-	if o.OverrideStatus {
+	if ho.OverrideStatus {
 		return 0
 	}
 	return *r.ExitCode
 }
 
-func (o *opts) failReport(r Report, errStr string) Report {
+func (ho *horenso) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
 	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
 	done := make(chan error)
 	go func() {
-		done <- o.runNoticer(r)
+		done <- ho.runNoticer(r)
 	}()
-	o.runReporter(r)
+	ho.runReporter(r)
 	<-done
 	return r
 }
@@ -196,7 +196,7 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	return b.Bytes(), err
 }
 
-func (o *opts) runHandlers(handlers []string, json []byte) error {
+func (ho *horenso) runHandlers(handlers []string, json []byte) error {
 	eg := &errgroup.Group{}
 	for _, handler := range handlers {
 		h := handler
@@ -208,15 +208,15 @@ func (o *opts) runHandlers(handlers []string, json []byte) error {
 	return eg.Wait()
 }
 
-func (o *opts) runNoticer(r Report) error {
-	if len(o.Noticer) < 1 {
+func (ho *horenso) runNoticer(r Report) error {
+	if len(ho.Noticer) < 1 {
 		return nil
 	}
 	json, _ := json.Marshal(r)
-	return o.runHandlers(o.Noticer, json)
+	return ho.runHandlers(ho.Noticer, json)
 }
 
-func (o *opts) runReporter(r Report) error {
+func (ho *horenso) runReporter(r Report) error {
 	json, _ := json.Marshal(r)
-	return o.runHandlers(o.Reporter, json)
+	return ho.runHandlers(ho.Reporter, json)
 }
