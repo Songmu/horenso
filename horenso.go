@@ -8,12 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
-	"sync"
 	"time"
 
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
 	"github.com/kballard/go-shellquote"
+	"golang.org/x/sync/errgroup"
 )
 
 type opts struct {
@@ -90,23 +90,18 @@ func (o *opts) run(args []string) (Report, error) {
 		done <- struct{}{}
 	}()
 
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-	go func() {
-		defer func() {
-			stdoutPipe.Close()
-			wg.Done()
-		}()
-		io.Copy(os.Stdout, stdoutPipe2)
-	}()
-	go func() {
-		defer func() {
-			stderrPipe.Close()
-			wg.Done()
-		}()
-		io.Copy(os.Stderr, stderrPipe2)
-	}()
-	wg.Wait()
+	eg := &errgroup.Group{}
+	eg.Go(func() error {
+		defer stdoutPipe.Close()
+		_, err := io.Copy(os.Stdout, stdoutPipe2)
+		return err
+	})
+	eg.Go(func() error {
+		defer stderrPipe.Close()
+		_, err := io.Copy(os.Stderr, stderrPipe2)
+		return err
+	})
+	eg.Wait()
 
 	err = cmd.Wait()
 	r.EndAt = now()
@@ -203,27 +198,27 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	return b.Bytes(), err
 }
 
-func runHandlers(handlers []string, json []byte) {
-	wg := &sync.WaitGroup{}
+func (o *opts) runHandlers(handlers []string, json []byte) error {
+	eg := &errgroup.Group{}
 	for _, handler := range handlers {
-		wg.Add(1)
-		go func(h string) {
-			runHandler(h, json)
-			wg.Done()
-		}(handler)
+		h := handler
+		eg.Go(func() error {
+			_, err := runHandler(h, json)
+			return err
+		})
 	}
-	wg.Wait()
+	return eg.Wait()
 }
 
-func (o *opts) runNoticer(r Report) {
+func (o *opts) runNoticer(r Report) error {
 	if len(o.Noticer) < 1 {
-		return
+		return nil
 	}
 	json, _ := json.Marshal(r)
-	runHandlers(o.Noticer, json)
+	return o.runHandlers(o.Noticer, json)
 }
 
-func (o *opts) runReporter(r Report) {
+func (o *opts) runReporter(r Report) error {
 	json, _ := json.Marshal(r)
-	runHandlers(o.Reporter, json)
+	return o.runHandlers(o.Reporter, json)
 }
