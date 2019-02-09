@@ -84,10 +84,9 @@ func (o *opts) run(args []string) (Report, error) {
 	if cmd.Process != nil {
 		r.Pid = &cmd.Process.Pid
 	}
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		o.runNoticer(r)
-		done <- struct{}{}
+		done <- o.runNoticer(r)
 	}()
 
 	eg := &errgroup.Group{}
@@ -168,10 +167,9 @@ func (o *opts) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
 	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
-	done := make(chan struct{})
+	done := make(chan error)
 	go func() {
-		o.runNoticer(r)
-		done <- struct{}{}
+		done <- o.runNoticer(r)
 	}()
 	o.runReporter(r)
 	<-done
