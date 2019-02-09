@@ -57,11 +57,13 @@ func (o *opts) run(args []string) (Report, error) {
 	if err != nil {
 		return o.failReport(r, err.Error()), err
 	}
+	defer stdoutPipe.Close()
+
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
-		stdoutPipe.Close()
 		return o.failReport(r, err.Error()), err
 	}
+	defer stderrPipe.Close()
 
 	var bufStdout bytes.Buffer
 	var bufStderr bytes.Buffer
@@ -77,8 +79,6 @@ func (o *opts) run(args []string) (Report, error) {
 	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
-		stderrPipe.Close()
-		stdoutPipe.Close()
 		return o.failReport(r, err.Error()), err
 	}
 	if cmd.Process != nil {
@@ -90,36 +90,30 @@ func (o *opts) run(args []string) (Report, error) {
 		done <- struct{}{}
 	}()
 
-	outDone := make(chan struct{})
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
 		defer func() {
 			stdoutPipe.Close()
-			outDone <- struct{}{}
+			wg.Done()
 		}()
 		io.Copy(os.Stdout, stdoutPipe2)
 	}()
-
-	errDone := make(chan struct{})
 	go func() {
 		defer func() {
 			stderrPipe.Close()
-			errDone <- struct{}{}
+			wg.Done()
 		}()
 		io.Copy(os.Stderr, stderrPipe2)
 	}()
+	wg.Wait()
 
-	<-outDone
-	<-errDone
 	err = cmd.Wait()
 	r.EndAt = now()
-	ex := wrapcommander.ResolveExitCode(err)
-	r.ExitCode = &ex
-	if *r.ExitCode > 128 {
-		w, ok := wrapcommander.ErrorToWaitStatus(err)
-		if ok {
-			r.Signaled = w.Signaled()
-		}
-	}
+	es := wrapcommander.ResolveExitStatus(err)
+	ecode := es.ExitCode()
+	r.ExitCode = &ecode
+	r.Signaled = es.Signaled()
 	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
 	if r.Signaled {
 		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
