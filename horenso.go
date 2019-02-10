@@ -33,21 +33,21 @@ type horenso struct {
 
 // Report is represents the result of the command
 type Report struct {
-	Command     string     `json:"command"`
-	CommandArgs []string   `json:"commandArgs"`
-	Tag         string     `json:"tag,omitempty"`
-	Output      string     `json:"output"`
-	Stdout      string     `json:"stdout"`
-	Stderr      string     `json:"stderr"`
-	ExitCode    *int       `json:"exitCode,omitempty"`
-	Signaled    bool       `json:"signaled"`
-	Result      string     `json:"result"`
-	Hostname    string     `json:"hostname"`
-	Pid         *int       `json:"pid,omitempty"`
-	StartAt     *time.Time `json:"startAt,omitempty"`
-	EndAt       *time.Time `json:"endAt,omitempty"`
-	SystemTime  *float64   `json:"systemTime,omitempty"`
-	UserTime    *float64   `json:"userTime,omitempty"`
+	Command     string    `json:"command"`
+	CommandArgs []string  `json:"commandArgs"`
+	Tag         string    `json:"tag,omitempty"`
+	Output      string    `json:"output"`
+	Stdout      string    `json:"stdout"`
+	Stderr      string    `json:"stderr"`
+	ExitCode    *int      `json:"exitCode,omitempty"`
+	Signaled    bool      `json:"signaled"`
+	Result      string    `json:"result"`
+	Hostname    string    `json:"hostname"`
+	Pid         *int      `json:"pid,omitempty"`
+	StartAt     time.Time `json:"startAt,omitempty"`
+	EndAt       time.Time `json:"endAt,omitempty"`
+	SystemTime  *float64  `json:"systemTime,omitempty"`
+	UserTime    *float64  `json:"userTime,omitempty"`
 }
 
 func (ho *horenso) openLog() (io.WriteCloser, error) {
@@ -106,7 +106,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
 	ho.logf(info, "starting executiton of the command %q", r.Command)
-	r.StartAt = now()
+	r.StartAt = time.Now()
 	err = cmd.Start()
 	if err != nil {
 		return ho.failReport(r, err.Error()), err
@@ -134,7 +134,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 		ho.logf(warn, "something went wrong while executing the command: %s", err)
 	}
 	err = cmd.Wait()
-	r.EndAt = now()
+	r.EndAt = time.Now()
 	es := wrapcommander.ResolveExitStatus(err)
 	ecode := es.ExitCode()
 	r.ExitCode = &ecode
@@ -159,11 +159,6 @@ func (ho *horenso) run(args []string) (Report, error) {
 	<-done
 	ho.logf(info, "all processes are completed for the job %q", r.Command)
 	return r, nil
-}
-
-func now() *time.Time {
-	now := time.Now()
-	return &now
 }
 
 func parseArgs(args []string) (*flags.Parser, *horenso, []string, error) {
