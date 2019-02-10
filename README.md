@@ -72,7 +72,7 @@ wrapper shell.
 
 ## result JSON
 
-The reporters and noticers are accept a result JSON via STDIN that reports command result like following.
+The reporters and noticers accept a result JSON via STDIN that reports command result like following.
 
 ```json
 {
