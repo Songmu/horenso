@@ -39,10 +39,22 @@ func (l *timestampWriter) Write(buf []byte) (int, error) {
 	return len(buf), nil
 }
 
-const layout = "[2006-01-02 15:04:05.999999] "
-
 func timestampBytes() []byte {
-	t := time.Now()
-	b := make([]byte, 0, len(layout))
-	return t.AppendFormat(b, layout)
+	return formatTimestamp(time.Now())
+}
+
+const layout = "[2006-01-02 15:04:05.999999"
+
+func formatTimestamp(t time.Time) []byte {
+	b := make([]byte, 0, len(layout)+2) // layout + "] "
+	b = t.AppendFormat(b, layout)
+	// 20 == len("[2006-01-02 15:04:05")
+	if len(b) == 20 {
+		b = append(b, '.')
+	}
+	for l := len(b); l < len(layout); l++ {
+		b = append(b, '0')
+	}
+	b = append(b, ']', ' ')
+	return b
 }
