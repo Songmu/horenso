@@ -21,12 +21,12 @@ import (
 
 type horenso struct {
 	Reporter       []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
-	Noticer        []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
+	Noticer        []string `short:"n" long:"noticer" value-name:"'ruby /path/to/noticer.rb'" description:"handler for noticing the start of the job"`
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
-	Logfile        string   `short:"l" long:"log" description:"logfile path. available strftime format like '%Y%m%d.log'"`
+	Logfile        string   `short:"l" long:"log" value-name:"logfile-path" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
 
 	outStream, errStream io.Writer
 }

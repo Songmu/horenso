@@ -31,12 +31,15 @@ Usage:
   horenso --reporter /path/to/reporter.pl -- /path/to/job [...]
 
 Application Options:
-  -r, --reporter=/path/to/reporter.pl     handler for reporting the result of the job
-  -n, --noticer='ruby/path/to/noticer.rb' handler for noticing the start of the job
-  -T, --timestamp                         add timestamp to merged output
-  -t, --tag=job-name                      tag of the job
-  -o, --override-status                   override command exit status, always exit 0
-  -v, --verbose                           verbose output. it can be stacked like -vv for more detailed log
+  -r, --reporter=/path/to/reporter.pl      handler for reporting the result of the job
+  -n, --noticer='ruby /path/to/noticer.rb' handler for noticing the start of the job
+  -T, --timestamp                          add timestamp to merged output
+  -t, --tag=job-name                       tag of the job
+  -o, --override-status                    override command exit status, always exit 0
+  -v, --verbose                            verbose output. it can be stacked like -vv for
+                                           more detailed log
+  -l, --log=logfile-path                   logfile path. The strftime format like
+                                           '%Y%m%d.log' is available.
 ```
 
 Handlers are should be an executable or command line string. You can specify multiple reporters and noticers.
