@@ -15,16 +15,18 @@ import (
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
 	"github.com/kballard/go-shellquote"
+	"github.com/lestrrat-go/strftime"
 	"golang.org/x/sync/errgroup"
 )
 
 type horenso struct {
 	Reporter       []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
-	Noticer        []string `short:"n" long:"noticer" value-name:"/path/to/noticer.rb" description:"handler for noticing the start of the job"`
+	Noticer        []string `short:"n" long:"noticer" value-name:"'ruby /path/to/noticer.rb'" description:"handler for noticing the start of the job"`
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
+	Logfile        string   `short:"l" long:"log" value-name:"logfile-path" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
 
 	outStream, errStream io.Writer
 }
@@ -46,6 +48,18 @@ type Report struct {
 	EndAt       *time.Time `json:"endAt,omitempty"`
 	SystemTime  *float64   `json:"systemTime,omitempty"`
 	UserTime    *float64   `json:"userTime,omitempty"`
+}
+
+func (ho *horenso) openLog() (io.WriteCloser, error) {
+	logfile, err := strftime.Format(ho.Logfile, time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse log file format %q: %s", ho.Logfile, err)
+	}
+	f, err := os.OpenFile(logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open log file %q: %s", logfile, err)
+	}
+	return f, nil
 }
 
 func (ho *horenso) run(args []string) (Report, error) {
@@ -77,8 +91,16 @@ func (ho *horenso) run(args []string) (Report, error) {
 	var bufMerged bytes.Buffer
 
 	var wtr io.Writer = &bufMerged
+	if ho.Logfile != "" {
+		if f, err := ho.openLog(); err != nil {
+			ho.log(warn, err.Error())
+		} else {
+			defer f.Close()
+			wtr = io.MultiWriter(wtr, f)
+		}
+	}
 	if ho.TimeStamp {
-		wtr = newTimestampWriter(&bufMerged)
+		wtr = newTimestampWriter(wtr)
 	}
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
