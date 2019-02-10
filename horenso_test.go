@@ -67,11 +67,11 @@ func TestRun(t *testing.T) {
 	if r.Stderr != "" {
 		t.Errorf("output should be empty but: %s", r.Stderr)
 	}
-	if r.StartAt.IsZero() {
-		t.Errorf("StartAt shouldn't be zero")
+	if r.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
 	}
-	if r.EndAt.IsZero() {
-		t.Errorf("EtartAt shouldn't be zero")
+	if r.EndAt == nil {
+		t.Errorf("EtartAt shouldn't be nil")
 	}
 	expectedHostname, _ := os.Hostname()
 	if r.Hostname != expectedHostname {
@@ -94,11 +94,11 @@ func TestRun(t *testing.T) {
 	if nr.Output != "" {
 		t.Errorf("something went wrong")
 	}
-	if nr.StartAt.IsZero() {
-		t.Errorf("StartAt shouldn't be zero")
+	if nr.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
 	}
-	if !nr.EndAt.IsZero() {
-		t.Errorf("EndAt should be zero")
+	if nr.EndAt != nil {
+		t.Errorf("EndAt should be nil")
 	}
 	if nr.ExitCode != nil {
 		t.Errorf("ExitCode should be nil")
@@ -148,11 +148,11 @@ func TestRunHugeOutput(t *testing.T) {
 	if r.Stderr != "" {
 		t.Errorf("output should be empty but: %s", r.Stderr)
 	}
-	if r.StartAt.IsZero() {
-		t.Errorf("StartAt shouldn't be zero")
+	if r.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
 	}
-	if r.EndAt.IsZero() {
-		t.Errorf("EtartAt shouldn't be zero")
+	if r.EndAt == nil {
+		t.Errorf("EtartAt shouldn't be nil")
 	}
 	expectedHostname, _ := os.Hostname()
 	if r.Hostname != expectedHostname {
@@ -175,11 +175,11 @@ func TestRunHugeOutput(t *testing.T) {
 	if nr.Output != "" {
 		t.Errorf("something went wrong")
 	}
-	if nr.StartAt.IsZero() {
-		t.Errorf("StartAt shouldn't be zero")
+	if nr.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
 	}
-	if !nr.EndAt.IsZero() {
-		t.Errorf("EndAt should be zero")
+	if nr.EndAt != nil {
+		t.Errorf("EndAt should be nil")
 	}
 	if nr.ExitCode != nil {
 		t.Errorf("ExitCode should be nil")
@@ -200,7 +200,5 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Result == r2.Result &&
 		r1.Pid == r2.Pid &&
 		r1.Hostname == r2.Hostname &&
-		r1.Signaled == r2.Signaled &&
-		r1.StartAt.Equal(r2.StartAt) &&
-		r1.EndAt.Equal(r2.EndAt)
+		r1.Signaled == r2.Signaled
 }
