@@ -12,15 +12,19 @@ const (
 	mute loglevel = iota
 	warn
 	info
+	debug
 )
+
+func (ho *horenso) logLevel() loglevel {
+	return loglevel(len(ho.Verbose))
+}
 
 func (ho *horenso) logf(lv loglevel, format string, a ...interface{}) {
 	ho.log(lv, fmt.Sprintf(format, a...))
 }
 
 func (ho *horenso) log(lv loglevel, str string) {
-	logLv := loglevel(len(ho.Verbose))
-	if logLv < lv || lv <= mute {
+	if ho.logLevel() < lv || lv <= mute {
 		return
 	}
 	if !strings.HasSuffix(str, "\n") {

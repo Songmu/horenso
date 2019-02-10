@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/Songmu/wrapcommander"
@@ -82,6 +83,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
+	ho.logf(info, "starting executiton of the command %q", r.Command)
 	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
@@ -91,9 +93,9 @@ func (ho *horenso) run(args []string) (Report, error) {
 		r.Pid = &cmd.Process.Pid
 	}
 	done := make(chan error)
-	go func() {
+	go func(r Report) {
 		done <- ho.runNoticer(r)
-	}()
+	}(r)
 
 	eg := &errgroup.Group{}
 	eg.Go(func() error {
@@ -118,6 +120,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	if r.Signaled {
 		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
 	}
+	ho.logf(info, "the command %q finished: %s", r.Command, r.Result)
 	r.Stdout = bufStdout.String()
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
@@ -187,10 +190,24 @@ func (ho *horenso) failReport(r Report, errStr string) Report {
 	return r
 }
 
-func runHandler(cmdStr string, json []byte) ([]byte, error) {
+func (ho *horenso) appendOut(base, out string) string {
+	out = strings.TrimSpace(out)
+	if out == "" {
+		return base
+	}
+	if !strings.HasSuffix(base, "\n") {
+		base += "\n"
+	}
+	const indent = "  "
+	return base + indent + strings.Replace("Output:\n"+out, "\n", "\n"+indent, -1)
+}
+
+func (ho *horenso) runHandler(cmdStr string, json []byte) error {
+	ho.logf(info, "start to run the handler %q", cmdStr)
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
-		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
+		ho.logf(warn, "failed to run the handler %q: invalid handler arguments", cmdStr)
+		return fmt.Errorf("invalid handler: %q", cmdStr)
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 	stdinPipe, _ := cmd.StdinPipe()
@@ -199,12 +216,25 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	cmd.Stderr = &b
 	if err := cmd.Start(); err != nil {
 		stdinPipe.Close()
-		return b.Bytes(), err
+		logoutput := fmt.Sprintf("failed to run the handler %q: %s", cmdStr, err)
+		ho.log(warn, ho.appendOut(logoutput, b.String()))
+		return err
 	}
 	stdinPipe.Write(json)
 	stdinPipe.Close()
 	err = cmd.Wait()
-	return b.Bytes(), err
+	if err != nil || ho.logLevel() >= info {
+		var logoutput string
+		lv := info
+		if err != nil {
+			lv = warn
+			logoutput = fmt.Sprintf("failed to run the handler %q: %s", cmdStr, err)
+		} else {
+			logoutput = fmt.Sprintf("finished to run the handler %q", cmdStr)
+		}
+		ho.log(lv, ho.appendOut(logoutput, b.String()))
+	}
+	return err
 }
 
 func (ho *horenso) runHandlers(handlers []string, json []byte) error {
@@ -212,8 +242,7 @@ func (ho *horenso) runHandlers(handlers []string, json []byte) error {
 	for _, handler := range handlers {
 		h := handler
 		eg.Go(func() error {
-			_, err := runHandler(h, json)
-			return err
+			return ho.runHandler(h, json)
 		})
 	}
 	return eg.Wait()
@@ -223,11 +252,13 @@ func (ho *horenso) runNoticer(r Report) error {
 	if len(ho.Noticer) < 1 {
 		return nil
 	}
+	ho.logf(info, "start to run the noticers")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Noticer, json)
 }
 
 func (ho *horenso) runReporter(r Report) error {
+	ho.logf(info, "start to run the reporters")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Reporter, json)
 }
