@@ -36,7 +36,7 @@ bump: devel-deps
 crossbuild: devel-deps
 	goxz -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
 	  -os=linux,darwin,freebsd -arch=386,amd64 \
-	  -d=./dist/v$(VERSION) ./cmd/goxz
+	  -d=./dist/v$(VERSION) ./cmd/horenso
 
 upload:
 	ghr v$(VERSION) dist/v$(VERSION)
