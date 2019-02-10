@@ -15,6 +15,7 @@ import (
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
 	"github.com/kballard/go-shellquote"
+	"github.com/lestrrat-go/strftime"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -25,6 +26,7 @@ type horenso struct {
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
+	Logfile        string   `short:"l" long:"log" description:"logfile path. available strftime format like '%Y%m%d.log'"`
 
 	outStream, errStream io.Writer
 }
@@ -77,8 +79,20 @@ func (ho *horenso) run(args []string) (Report, error) {
 	var bufMerged bytes.Buffer
 
 	var wtr io.Writer = &bufMerged
+	if ho.Logfile != "" {
+		if logfile, err := strftime.Format(ho.Logfile, time.Now()); err != nil {
+			ho.logf(warn, "failed to parse log file format %q: %s", ho.Logfile, err)
+		} else {
+			if f, err := os.OpenFile(logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); err != nil {
+				ho.logf(warn, "failed to open log file %q: %s", logfile, err)
+			} else {
+				defer f.Close()
+				wtr = io.MultiWriter(wtr, f)
+			}
+		}
+	}
 	if ho.TimeStamp {
-		wtr = newTimestampWriter(&bufMerged)
+		wtr = newTimestampWriter(wtr)
 	}
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
