@@ -24,6 +24,8 @@ type horenso struct {
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output"`
+
+	outStream, errStream io.Writer
 }
 
 // Report is represents the result of the command
@@ -46,6 +48,8 @@ type Report struct {
 }
 
 func (ho *horenso) run(args []string) (Report, error) {
+	log.SetOutput(ho.errStream)
+
 	hostname, _ := os.Hostname()
 	r := Report{
 		Command:     shellquote.Join(args...),
@@ -94,12 +98,12 @@ func (ho *horenso) run(args []string) (Report, error) {
 	eg := &errgroup.Group{}
 	eg.Go(func() error {
 		defer stdoutPipe.Close()
-		_, err := io.Copy(os.Stdout, stdoutPipe2)
+		_, err := io.Copy(ho.outStream, stdoutPipe2)
 		return err
 	})
 	eg.Go(func() error {
 		defer stderrPipe.Close()
-		_, err := io.Copy(os.Stderr, stderrPipe2)
+		_, err := io.Copy(ho.errStream, stderrPipe2)
 		return err
 	})
 	eg.Wait()
@@ -143,6 +147,8 @@ func parseArgs(args []string) (*flags.Parser, *horenso, []string, error) {
 
 Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 	rest, err := p.ParseArgs(args)
+	ho.outStream = os.Stdout
+	ho.errStream = os.Stderr
 	return p, ho, rest, err
 }
 
@@ -154,7 +160,7 @@ func Run(args []string) int {
 	p, ho, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
-			p.WriteHelp(os.Stderr)
+			p.WriteHelp(ho.errStream)
 		}
 		return 2
 	}
