@@ -24,7 +24,7 @@ type horenso struct {
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
-	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output"`
+	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
 
 	outStream, errStream io.Writer
 }
