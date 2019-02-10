@@ -43,7 +43,7 @@ type Report struct {
 	Signaled    bool      `json:"signaled"`
 	Result      string    `json:"result"`
 	Hostname    string    `json:"hostname"`
-	Pid         *int      `json:"pid,omitempty"`
+	Pid         int       `json:"pid,omitempty"`
 	StartAt     time.Time `json:"startAt,omitempty"`
 	EndAt       time.Time `json:"endAt,omitempty"`
 	SystemTime  *float64  `json:"systemTime,omitempty"`
@@ -112,7 +112,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 		return ho.failReport(r, err.Error()), err
 	}
 	if cmd.Process != nil {
-		r.Pid = &cmd.Process.Pid
+		r.Pid = cmd.Process.Pid
 	}
 	done := make(chan error)
 	go func(r Report) {

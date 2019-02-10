@@ -88,7 +88,7 @@ func TestRun(t *testing.T) {
 	}
 
 	nr := parseReport(noticeReport)
-	if *nr.Pid != *r.Pid {
+	if nr.Pid != r.Pid {
 		t.Errorf("something went wrong")
 	}
 	if nr.Output != "" {
@@ -169,7 +169,7 @@ func TestRunHugeOutput(t *testing.T) {
 	}
 
 	nr := parseReport(noticeReport)
-	if *nr.Pid != *r.Pid {
+	if nr.Pid != r.Pid {
 		t.Errorf("something went wrong")
 	}
 	if nr.Output != "" {
@@ -198,7 +198,7 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Stderr == r2.Stderr &&
 		*r1.ExitCode == *r2.ExitCode &&
 		r1.Result == r2.Result &&
-		*r1.Pid == *r2.Pid &&
+		r1.Pid == r2.Pid &&
 		r1.Hostname == r2.Hostname &&
 		r1.Signaled == r2.Signaled &&
 		r1.StartAt.Equal(r2.StartAt) &&
