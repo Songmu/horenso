@@ -108,8 +108,9 @@ func (ho *horenso) run(args []string) (Report, error) {
 		_, err := io.Copy(ho.errStream, stderrPipe2)
 		return err
 	})
-	eg.Wait()
-
+	if err := eg.Wait(); err != nil {
+		ho.logf(warn, "something went wrong while executing the command: %s", err)
+	}
 	err = cmd.Wait()
 	r.EndAt = now()
 	es := wrapcommander.ResolveExitStatus(err)
@@ -134,7 +135,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	}
 	ho.runReporter(r)
 	<-done
-
+	ho.logf(info, "all processes are completed for the job %q", r.Command)
 	return r, nil
 }
 
@@ -180,7 +181,8 @@ func Run(args []string) int {
 func (ho *horenso) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
-	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
+	r.Result = fmt.Sprintf("failed to execute the command: %s", errStr)
+	ho.logf(warn, "failed to execute the command %q: %s", r.Command, errStr)
 	done := make(chan error)
 	go func() {
 		done <- ho.runNoticer(r)
@@ -203,7 +205,7 @@ func (ho *horenso) appendOut(base, out string) string {
 }
 
 func (ho *horenso) runHandler(cmdStr string, json []byte) error {
-	ho.logf(info, "start to run the handler %q", cmdStr)
+	ho.logf(info, "starting to run the handler %q", cmdStr)
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
 		ho.logf(warn, "failed to run the handler %q: invalid handler arguments", cmdStr)
@@ -252,13 +254,15 @@ func (ho *horenso) runNoticer(r Report) error {
 	if len(ho.Noticer) < 1 {
 		return nil
 	}
-	ho.logf(info, "start to run the noticers")
+	ho.logf(info, "starting to run the noticers")
+	defer ho.logf(info, "finished to run the noticers")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Noticer, json)
 }
 
 func (ho *horenso) runReporter(r Report) error {
-	ho.logf(info, "start to run the reporters")
+	ho.logf(info, "starting to run the reporters")
+	defer ho.logf(info, "finished to run the reporters")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Reporter, json)
 }
