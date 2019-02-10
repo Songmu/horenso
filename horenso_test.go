@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func temp() string {
@@ -189,6 +190,16 @@ func TestRunHugeOutput(t *testing.T) {
 	}
 }
 
+func equalTimePtr(t1, t2 *time.Time) bool {
+	if t1 == nil && t2 == nil {
+		return true
+	}
+	if t1 == nil || t2 == nil {
+		return false
+	}
+	return (*t1).Equal(*t2)
+}
+
 func deepEqual(r1, r2 Report) bool {
 	return r1.Command == r2.Command &&
 		reflect.DeepEqual(r1.CommandArgs, r2.CommandArgs) &&
@@ -200,5 +211,7 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Result == r2.Result &&
 		r1.Pid == r2.Pid &&
 		r1.Hostname == r2.Hostname &&
-		r1.Signaled == r2.Signaled
+		r1.Signaled == r2.Signaled &&
+		equalTimePtr(r1.StartAt, r2.StartAt) &&
+		equalTimePtr(r1.EndAt, r2.EndAt)
 }
