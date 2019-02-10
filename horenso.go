@@ -46,8 +46,8 @@ type Report struct {
 	Pid         int       `json:"pid,omitempty"`
 	StartAt     time.Time `json:"startAt,omitempty"`
 	EndAt       time.Time `json:"endAt,omitempty"`
-	SystemTime  *float64  `json:"systemTime,omitempty"`
-	UserTime    *float64  `json:"userTime,omitempty"`
+	SystemTime  float64   `json:"systemTime,omitempty"`
+	UserTime    float64   `json:"userTime,omitempty"`
 }
 
 func (ho *horenso) openLog() (io.WriteCloser, error) {
@@ -148,12 +148,8 @@ func (ho *horenso) run(args []string) (Report, error) {
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
 	if p := cmd.ProcessState; p != nil {
-		durPtr := func(t time.Duration) *float64 {
-			f := float64(t) / float64(time.Second)
-			return &f
-		}
-		r.UserTime = durPtr(p.UserTime())
-		r.SystemTime = durPtr(p.SystemTime())
+		r.UserTime = float64(p.UserTime()) / float64(time.Second)
+		r.SystemTime = float64(p.SystemTime()) / float64(time.Second)
 	}
 	ho.runReporter(r)
 	<-done
