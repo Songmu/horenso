@@ -12,11 +12,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Songmu/timestamper"
 	"github.com/Songmu/wrapcommander"
 	"github.com/jessevdk/go-flags"
 	"github.com/kballard/go-shellquote"
 	"github.com/lestrrat-go/strftime"
 	"golang.org/x/sync/errgroup"
+	"golang.org/x/text/transform"
 )
 
 type horenso struct {
@@ -100,7 +102,9 @@ func (ho *horenso) run(args []string) (Report, error) {
 		}
 	}
 	if ho.TimeStamp {
-		wtr = newTimestampWriter(wtr)
+		wc := transform.NewWriter(wtr, timestamper.New())
+		defer wc.Close()
+		wtr = wc
 	}
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
