@@ -50,6 +50,18 @@ type Report struct {
 	UserTime    *float64   `json:"userTime,omitempty"`
 }
 
+func (ho *horenso) openLog() (io.WriteCloser, error) {
+	logfile, err := strftime.Format(ho.Logfile, time.Now())
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse log file format %q: %s", ho.Logfile, err)
+	}
+	f, err := os.OpenFile(logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open log file %q: %s", logfile, err)
+	}
+	return f, nil
+}
+
 func (ho *horenso) run(args []string) (Report, error) {
 	log.SetOutput(ho.errStream)
 
@@ -80,15 +92,11 @@ func (ho *horenso) run(args []string) (Report, error) {
 
 	var wtr io.Writer = &bufMerged
 	if ho.Logfile != "" {
-		if logfile, err := strftime.Format(ho.Logfile, time.Now()); err != nil {
-			ho.logf(warn, "failed to parse log file format %q: %s", ho.Logfile, err)
+		if f, err := ho.openLog(); err != nil {
+			ho.log(warn, err.Error())
 		} else {
-			if f, err := os.OpenFile(logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644); err != nil {
-				ho.logf(warn, "failed to open log file %q: %s", logfile, err)
-			} else {
-				defer f.Close()
-				wtr = io.MultiWriter(wtr, f)
-			}
+			defer f.Close()
+			wtr = io.MultiWriter(wtr, f)
 		}
 	}
 	if ho.TimeStamp {
