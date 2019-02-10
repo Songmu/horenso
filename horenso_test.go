@@ -31,7 +31,7 @@ func TestRun(t *testing.T) {
 	noticeReport := temp()
 	fname := temp()
 	fname2 := temp()
-	_, o, cmdArgs, err := parseArgs([]string{
+	_, ho, cmdArgs, err := parseArgs([]string{
 		"--noticer",
 		"go run testdata/reporter.go " + noticeReport,
 		"-n", "invalid",
@@ -45,7 +45,10 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	r, err := o.run(cmdArgs)
+	ho.errStream = ioutil.Discard
+	ho.outStream = ioutil.Discard
+
+	r, err := ho.run(cmdArgs)
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
@@ -109,7 +112,7 @@ func TestRunHugeOutput(t *testing.T) {
 	noticeReport := temp()
 	fname := temp()
 	fname2 := temp()
-	_, o, cmdArgs, err := parseArgs([]string{
+	_, ho, cmdArgs, err := parseArgs([]string{
 		"--noticer",
 		"go run testdata/reporter.go " + noticeReport,
 		"-n", "invalid",
@@ -123,7 +126,10 @@ func TestRunHugeOutput(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	r, err := o.run(cmdArgs)
+	ho.errStream = ioutil.Discard
+	ho.outStream = ioutil.Discard
+
+	r, err := ho.run(cmdArgs)
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}

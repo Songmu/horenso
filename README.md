@@ -36,6 +36,7 @@ Application Options:
   -T, --timestamp                         add timestamp to merged output
   -t, --tag=job-name                      tag of the job
   -o, --override-status                   override command exit status, always exit 0
+  -v, --verbose                           verbose output. it can be stacked like -vv for more detailed log
 ```
 
 Handlers are should be an executable or command line string. You can specify multiple reporters and noticers.
@@ -72,7 +73,7 @@ wrapper shell.
 
 ## result JSON
 
-The reporters and noticers are accept a result JSON via STDIN that reports command result like following.
+The reporters and noticers accept a result JSON via STDIN that reports command result like following.
 
 ```json
 {

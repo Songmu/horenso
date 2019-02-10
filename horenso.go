@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/Songmu/wrapcommander"
@@ -22,6 +24,9 @@ type horenso struct {
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
+	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
+
+	outStream, errStream io.Writer
 }
 
 // Report is represents the result of the command
@@ -44,6 +49,8 @@ type Report struct {
 }
 
 func (ho *horenso) run(args []string) (Report, error) {
+	log.SetOutput(ho.errStream)
+
 	hostname, _ := os.Hostname()
 	r := Report{
 		Command:     shellquote.Join(args...),
@@ -76,6 +83,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
+	ho.logf(info, "starting executiton of the command %q", r.Command)
 	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
@@ -85,23 +93,24 @@ func (ho *horenso) run(args []string) (Report, error) {
 		r.Pid = &cmd.Process.Pid
 	}
 	done := make(chan error)
-	go func() {
+	go func(r Report) {
 		done <- ho.runNoticer(r)
-	}()
+	}(r)
 
 	eg := &errgroup.Group{}
 	eg.Go(func() error {
 		defer stdoutPipe.Close()
-		_, err := io.Copy(os.Stdout, stdoutPipe2)
+		_, err := io.Copy(ho.outStream, stdoutPipe2)
 		return err
 	})
 	eg.Go(func() error {
 		defer stderrPipe.Close()
-		_, err := io.Copy(os.Stderr, stderrPipe2)
+		_, err := io.Copy(ho.errStream, stderrPipe2)
 		return err
 	})
-	eg.Wait()
-
+	if err := eg.Wait(); err != nil {
+		ho.logf(warn, "something went wrong while executing the command: %s", err)
+	}
 	err = cmd.Wait()
 	r.EndAt = now()
 	es := wrapcommander.ResolveExitStatus(err)
@@ -112,6 +121,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	if r.Signaled {
 		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
 	}
+	ho.logf(info, "the command %q finished: %s", r.Command, r.Result)
 	r.Stdout = bufStdout.String()
 	r.Stderr = bufStderr.String()
 	r.Output = bufMerged.String()
@@ -125,7 +135,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	}
 	ho.runReporter(r)
 	<-done
-
+	ho.logf(info, "all processes are completed for the job %q", r.Command)
 	return r, nil
 }
 
@@ -135,21 +145,26 @@ func now() *time.Time {
 }
 
 func parseArgs(args []string) (*flags.Parser, *horenso, []string, error) {
-	o := &horenso{}
-	p := flags.NewParser(o, flags.Default)
+	ho := &horenso{}
+	p := flags.NewParser(ho, flags.Default)
 	p.Usage = fmt.Sprintf(`--reporter /path/to/reporter.pl -- /path/to/job [...]
 
 Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 	rest, err := p.ParseArgs(args)
-	return p, o, rest, err
+	ho.outStream = os.Stdout
+	ho.errStream = os.Stderr
+	return p, ho, rest, err
 }
 
 // Run the horenso
 func Run(args []string) int {
+	log.SetPrefix("[horenso] ")
+	log.SetFlags(0)
+
 	p, ho, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
-			p.WriteHelp(os.Stderr)
+			p.WriteHelp(ho.errStream)
 		}
 		return 2
 	}
@@ -166,7 +181,8 @@ func Run(args []string) int {
 func (ho *horenso) failReport(r Report, errStr string) Report {
 	fail := -1
 	r.ExitCode = &fail
-	r.Result = fmt.Sprintf("failed to execute command: %s", errStr)
+	r.Result = fmt.Sprintf("failed to execute the command: %s", errStr)
+	ho.logf(warn, "failed to execute the command %q: %s", r.Command, errStr)
 	done := make(chan error)
 	go func() {
 		done <- ho.runNoticer(r)
@@ -176,10 +192,24 @@ func (ho *horenso) failReport(r Report, errStr string) Report {
 	return r
 }
 
-func runHandler(cmdStr string, json []byte) ([]byte, error) {
+func (ho *horenso) appendOut(base, out string) string {
+	out = strings.TrimSpace(out)
+	if out == "" {
+		return base
+	}
+	if !strings.HasSuffix(base, "\n") {
+		base += "\n"
+	}
+	const indent = "  "
+	return base + indent + strings.Replace("Output:\n"+out, "\n", "\n"+indent, -1)
+}
+
+func (ho *horenso) runHandler(cmdStr string, json []byte) error {
+	ho.logf(info, "starting to run the handler %q", cmdStr)
 	args, err := shellquote.Split(cmdStr)
 	if err != nil || len(args) < 1 {
-		return nil, fmt.Errorf("invalid handler: %q", cmdStr)
+		ho.logf(warn, "failed to run the handler %q: invalid handler arguments", cmdStr)
+		return fmt.Errorf("invalid handler: %q", cmdStr)
 	}
 	cmd := exec.Command(args[0], args[1:]...)
 	stdinPipe, _ := cmd.StdinPipe()
@@ -188,12 +218,25 @@ func runHandler(cmdStr string, json []byte) ([]byte, error) {
 	cmd.Stderr = &b
 	if err := cmd.Start(); err != nil {
 		stdinPipe.Close()
-		return b.Bytes(), err
+		logoutput := fmt.Sprintf("failed to run the handler %q: %s", cmdStr, err)
+		ho.log(warn, ho.appendOut(logoutput, b.String()))
+		return err
 	}
 	stdinPipe.Write(json)
 	stdinPipe.Close()
 	err = cmd.Wait()
-	return b.Bytes(), err
+	if err != nil || ho.logLevel() >= info {
+		var logoutput string
+		lv := info
+		if err != nil {
+			lv = warn
+			logoutput = fmt.Sprintf("failed to run the handler %q: %s", cmdStr, err)
+		} else {
+			logoutput = fmt.Sprintf("finished to run the handler %q", cmdStr)
+		}
+		ho.log(lv, ho.appendOut(logoutput, b.String()))
+	}
+	return err
 }
 
 func (ho *horenso) runHandlers(handlers []string, json []byte) error {
@@ -201,8 +244,7 @@ func (ho *horenso) runHandlers(handlers []string, json []byte) error {
 	for _, handler := range handlers {
 		h := handler
 		eg.Go(func() error {
-			_, err := runHandler(h, json)
-			return err
+			return ho.runHandler(h, json)
 		})
 	}
 	return eg.Wait()
@@ -212,11 +254,15 @@ func (ho *horenso) runNoticer(r Report) error {
 	if len(ho.Noticer) < 1 {
 		return nil
 	}
+	ho.logf(info, "starting to run the noticers")
+	defer ho.logf(info, "finished to run the noticers")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Noticer, json)
 }
 
 func (ho *horenso) runReporter(r Report) error {
+	ho.logf(info, "starting to run the reporters")
+	defer ho.logf(info, "finished to run the reporters")
 	json, _ := json.Marshal(r)
 	return ho.runHandlers(ho.Reporter, json)
 }
