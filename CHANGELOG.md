@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.3.0](https://github.com/Songmu/horenso/compare/v0.2.0...v0.3.0) (2019-02-10)
+
+* Update deps [#24](https://github.com/Songmu/horenso/pull/24) ([Songmu](https://github.com/Songmu))
+* add --log option [#23](https://github.com/Songmu/horenso/pull/23) ([Songmu](https://github.com/Songmu))
+* refine timestamp format in timestampWriter [#22](https://github.com/Songmu/horenso/pull/22) ([Songmu](https://github.com/Songmu))
+* Add verbose option to output `horenso` itself log output [#21](https://github.com/Songmu/horenso/pull/21) ([Songmu](https://github.com/Songmu))
+* refactorings [#20](https://github.com/Songmu/horenso/pull/20) ([Songmu](https://github.com/Songmu))
+* update README [#18](https://github.com/Songmu/horenso/pull/18) ([dozen](https://github.com/dozen))
+
 ## [v0.2.0](https://github.com/Songmu/horenso/compare/v0.1.0...v0.2.0) (2018-01-16)
 
 * update deps (wrapcommander) [#17](https://github.com/Songmu/horenso/pull/17) ([Songmu](https://github.com/Songmu))
