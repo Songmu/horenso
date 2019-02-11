@@ -185,6 +185,47 @@ func TestRun_log(t *testing.T) {
 	}
 }
 
+func TestRun_notfound(t *testing.T) {
+	fname := temp()
+	defer os.RemoveAll(fname)
+	_, ho, cmdArgs, err := parseArgs([]string{
+		"--reporter",
+		"go run testdata/reporter.go " + fname,
+		"--",
+		"testdata/notfound",
+	})
+	if err != nil {
+		t.Errorf("err should be nil but: %s", err)
+	}
+	ho.errStream = ioutil.Discard
+	ho.outStream = ioutil.Discard
+
+	r, err := ho.run(cmdArgs)
+	if err == nil {
+		t.Errorf("err shouldn't be nil")
+	}
+
+	if *r.ExitCode != -1 {
+		t.Errorf("exit code should be -1 but: %d", *r.ExitCode)
+	}
+
+	if r.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
+	}
+	if r.EndAt != nil {
+		t.Errorf("EtartAt should be nil")
+	}
+	expectedHostname, _ := os.Hostname()
+	if r.Hostname != expectedHostname {
+		t.Errorf("Hostname should be %s but: %s", expectedHostname, r.Hostname)
+	}
+
+	rr := parseReport(fname)
+	if !deepEqual(r, rr) {
+		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr)
+	}
+}
+
 func TestRunHugeOutput(t *testing.T) {
 	fname := temp()
 	defer os.RemoveAll(fname)
