@@ -1,0 +1,4 @@
+reporter:
+- hoge
+- fuga
+noticer: bar
