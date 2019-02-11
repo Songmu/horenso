@@ -15,7 +15,7 @@ type config struct {
 	Timestamp      bool     `yaml:"timestamp"`
 	Tag            string   `yaml:"tag"`
 	OverrideStatus bool     `yaml:"overrideStatus"`
-	Log            string   `yaml:"log"`
+	Logfile        string   `yaml:"log"`
 }
 
 func (ha *handlers) UnmarshalYAML(unmarshal func(interface{}) error) error {
