@@ -186,22 +186,11 @@ func TestRun_log(t *testing.T) {
 }
 
 func TestRunHugeOutput(t *testing.T) {
-	noticeReport := temp()
 	fname := temp()
-	fname2 := temp()
-	defer func() {
-		for _, f := range []string{noticeReport, fname, fname2} {
-			os.RemoveAll(f)
-		}
-	}()
+	defer os.RemoveAll(fname)
 	_, ho, cmdArgs, err := parseArgs([]string{
-		"--noticer",
-		"go run testdata/reporter.go " + noticeReport,
-		"-n", "invalid",
 		"--reporter",
 		"go run testdata/reporter.go " + fname,
-		"-r",
-		"go run testdata/reporter.go " + fname2,
 		"--",
 		"go", "run", "testdata/run_hugeoutput.go",
 	})
@@ -244,30 +233,6 @@ func TestRunHugeOutput(t *testing.T) {
 	rr := parseReport(fname)
 	if !deepEqual(r, rr) {
 		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr)
-	}
-	rr2 := parseReport(fname2)
-	if !deepEqual(r, rr2) {
-		t.Errorf("something went wrong. expect: %#v, got: %#v", r, rr2)
-	}
-
-	nr := parseReport(noticeReport)
-	if nr.Pid != r.Pid {
-		t.Errorf("something went wrong")
-	}
-	if nr.Output != "" {
-		t.Errorf("something went wrong")
-	}
-	if nr.StartAt == nil {
-		t.Errorf("StartAt shouldn't be nil")
-	}
-	if nr.EndAt != nil {
-		t.Errorf("EndAt should be nil")
-	}
-	if nr.ExitCode != nil {
-		t.Errorf("ExitCode should be nil")
-	}
-	if nr.Hostname != r.Hostname {
-		t.Errorf("something went wrong")
 	}
 }
 
