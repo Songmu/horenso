@@ -22,13 +22,14 @@ import (
 )
 
 type horenso struct {
-	Reporter       []string `short:"r" long:"reporter" required:"true" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
+	Reporter       []string `short:"r" long:"reporter" value-name:"/path/to/reporter.pl" description:"handler for reporting the result of the job"`
 	Noticer        []string `short:"n" long:"noticer" value-name:"'ruby /path/to/noticer.rb'" description:"handler for noticing the start of the job"`
 	TimeStamp      bool     `short:"T" long:"timestamp" description:"add timestamp to merged output"`
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
-	Logfile        string   `short:"l" long:"log" value-name:"logfile-path" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
+	Logfile        string   `short:"l" long:"log" value-name:"/path/to/logfile" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
+	Config         string   `short:"c" long:"config" value-name:"/path/to/config.yaml" description:"config file"`
 
 	outStream, errStream io.Writer
 }
@@ -64,10 +65,43 @@ func (ho *horenso) openLog() (io.WriteCloser, error) {
 	return f, nil
 }
 
+func (ho *horenso) loadConfig() error {
+	conf := ho.Config
+	if conf == "" {
+		conf = os.Getenv("HORENSO_CONFIG")
+	}
+	if conf == "" {
+		return nil
+	}
+	c, err := loadConfig(conf)
+	if err != nil {
+		return err
+	}
+	ho.Reporter = append(ho.Reporter, c.Reporter...)
+	ho.Noticer = append(ho.Noticer, c.Noticer...)
+	if !ho.TimeStamp {
+		ho.TimeStamp = c.Timestamp
+	}
+	if ho.Tag == "" {
+		ho.Tag = c.Tag
+	}
+	if !ho.OverrideStatus {
+		ho.OverrideStatus = c.OverrideStatus
+	}
+	if ho.Logfile == "" {
+		ho.Logfile = c.Logfile
+	}
+	return nil
+}
+
 func (ho *horenso) run(args []string) (Report, error) {
 	log.SetPrefix("[horenso] ")
 	log.SetFlags(0)
 	log.SetOutput(ho.errStream)
+
+	if err := ho.loadConfig(); err != nil {
+		ho.logf(warn, "failed to load config: %s", err)
+	}
 
 	hostname, _ := os.Hostname()
 	r := Report{

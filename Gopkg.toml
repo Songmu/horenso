@@ -27,7 +27,7 @@
 
 [[constraint]]
   name = "github.com/Songmu/timestamper"
-  version = "0.0.1"
+  version = "0.0.2"
 
 [[constraint]]
   branch = "master"
@@ -52,6 +52,10 @@
 [[constraint]]
   name = "golang.org/x/text"
   version = "0.3.0"
+
+[[constraint]]
+  name = "gopkg.in/yaml.v2"
+  version = "2.2.2"
 
 [prune]
   go-tests = true

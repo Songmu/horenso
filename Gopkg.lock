@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:4a9d1054b9125b6a61933b19df1adeb3977d433cf6d119d3f857010632387d34"
+  digest = "1:e5632e07aab0f2102ccaab79c7c72ec4b0acdde0874c79559d67022ee2201b50"
   name = "github.com/Songmu/timestamper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6228595da85e77b5151456c1c8a83c65d5e70f00"
-  version = "v0.0.1"
+  revision = "2c8164633b0e26a6f72f126268d1bf1558975f00"
+  version = "v0.0.2"
 
 [[projects]]
   branch = "master"
@@ -65,6 +65,14 @@
   revision = "f21a4dfb5e38f5895301dc265a8def02365cc3d0"
   version = "v0.3.0"
 
+[[projects]]
+  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
+  version = "v2.2.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
@@ -76,6 +84,7 @@
     "github.com/lestrrat-go/strftime",
     "golang.org/x/sync/errgroup",
     "golang.org/x/text/transform",
+    "gopkg.in/yaml.v2",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

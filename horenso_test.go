@@ -226,6 +226,44 @@ func TestRun_notfound(t *testing.T) {
 	}
 }
 
+func TestRun_config(t *testing.T) {
+	_, ho, cmdArgs, err := parseArgs([]string{
+		"-r", "hhh",
+		"--config", "testdata/config.yaml",
+		"--",
+		"go", "run", "testdata/run.go",
+	})
+	if err != nil {
+		t.Errorf("err should be nil but: %s", err)
+	}
+	ho.errStream = ioutil.Discard
+	ho.outStream = ioutil.Discard
+
+	r, err := ho.run(cmdArgs)
+	if err != nil {
+		t.Errorf("err should be nil, but: %s", err)
+	}
+
+	if !reflect.DeepEqual(ho.Reporter, []string{"hhh", "hoge", "fuga"}) {
+		t.Errorf("something went wrong")
+	}
+
+	if r.ExitCode != 0 {
+		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
+	}
+
+	if r.StartAt == nil {
+		t.Errorf("StartAt shouldn't be nil")
+	}
+	if r.EndAt == nil {
+		t.Errorf("EndAt shouldn't be nil")
+	}
+	expectedHostname, _ := os.Hostname()
+	if r.Hostname != expectedHostname {
+		t.Errorf("Hostname should be %s but: %s", expectedHostname, r.Hostname)
+	}
+}
+
 func TestRunHugeOutput(t *testing.T) {
 	fname := temp()
 	defer os.RemoveAll(fname)
