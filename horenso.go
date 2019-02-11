@@ -41,7 +41,7 @@ type Report struct {
 	Output      string     `json:"output"`
 	Stdout      string     `json:"stdout"`
 	Stderr      string     `json:"stderr"`
-	ExitCode    *int       `json:"exitCode,omitempty"`
+	ExitCode    int        `json:"exitCode"`
 	Signaled    bool       `json:"signaled"`
 	Result      string     `json:"result"`
 	Hostname    string     `json:"hostname"`
@@ -74,6 +74,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 		Command:     shellquote.Join(args...),
 		CommandArgs: args,
 		Tag:         ho.Tag,
+		ExitCode:    -1,
 		Hostname:    hostname,
 	}
 	cmd := exec.Command(args[0], args[1:]...)
@@ -142,12 +143,11 @@ func (ho *horenso) run(args []string) (Report, error) {
 	err = cmd.Wait()
 	r.EndAt = now()
 	es := wrapcommander.ResolveExitStatus(err)
-	ecode := es.ExitCode()
-	r.ExitCode = &ecode
+	r.ExitCode = es.ExitCode()
 	r.Signaled = es.Signaled()
-	r.Result = fmt.Sprintf("command exited with code: %d", *r.ExitCode)
+	r.Result = fmt.Sprintf("command exited with code: %d", r.ExitCode)
 	if r.Signaled {
-		r.Result = fmt.Sprintf("command died with signal: %d", *r.ExitCode&127)
+		r.Result = fmt.Sprintf("command died with signal: %d", r.ExitCode&127)
 	}
 	ho.logf(info, "the command %q finished: %s", r.Command, r.Result)
 	r.Stdout = bufStdout.String()
@@ -196,12 +196,10 @@ func Run(args []string) int {
 	if ho.OverrideStatus {
 		return 0
 	}
-	return *r.ExitCode
+	return r.ExitCode
 }
 
 func (ho *horenso) failReport(r Report, errStr string) Report {
-	fail := -1
-	r.ExitCode = &fail
 	r.Result = fmt.Sprintf("failed to execute the command: %s", errStr)
 	ho.logf(warn, "failed to execute the command %q: %s", r.Command, errStr)
 	done := make(chan error)

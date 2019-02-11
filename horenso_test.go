@@ -60,7 +60,7 @@ func TestRun(t *testing.T) {
 		t.Errorf("err should be nil but: %s", err)
 	}
 
-	if *r.ExitCode != 0 {
+	if r.ExitCode != 0 {
 		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
 	}
 
@@ -107,8 +107,8 @@ func TestRun(t *testing.T) {
 	if nr.EndAt != nil {
 		t.Errorf("EndAt should be nil")
 	}
-	if nr.ExitCode != nil {
-		t.Errorf("ExitCode should be nil")
+	if nr.ExitCode != -1 {
+		t.Errorf("ExitCode should be -1")
 	}
 	if nr.Hostname != r.Hostname {
 		t.Errorf("something went wrong")
@@ -142,7 +142,7 @@ func TestRun_log(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	if *r.ExitCode != 0 {
+	if r.ExitCode != 0 {
 		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
 	}
 
@@ -205,8 +205,8 @@ func TestRun_notfound(t *testing.T) {
 		t.Errorf("err shouldn't be nil")
 	}
 
-	if *r.ExitCode != -1 {
-		t.Errorf("exit code should be -1 but: %d", *r.ExitCode)
+	if r.ExitCode != -1 {
+		t.Errorf("exit code should be -1 but: %d", r.ExitCode)
 	}
 
 	if r.StartAt == nil {
@@ -246,7 +246,7 @@ func TestRunHugeOutput(t *testing.T) {
 		t.Errorf("err should be nil but: %s", err)
 	}
 
-	if *r.ExitCode != 0 {
+	if r.ExitCode != 0 {
 		t.Errorf("exit code should be 0 but: %d", r.ExitCode)
 	}
 
@@ -294,7 +294,7 @@ func deepEqual(r1, r2 Report) bool {
 		r1.Output == r2.Output &&
 		r1.Stdout == r2.Stdout &&
 		r1.Stderr == r2.Stderr &&
-		*r1.ExitCode == *r2.ExitCode &&
+		r1.ExitCode == r2.ExitCode &&
 		r1.Result == r2.Result &&
 		r1.Pid == r2.Pid &&
 		r1.Hostname == r2.Hostname &&
