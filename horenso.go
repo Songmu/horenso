@@ -65,6 +65,8 @@ func (ho *horenso) openLog() (io.WriteCloser, error) {
 }
 
 func (ho *horenso) run(args []string) (Report, error) {
+	log.SetPrefix("[horenso] ")
+	log.SetFlags(0)
 	log.SetOutput(ho.errStream)
 
 	hostname, _ := os.Hostname()
@@ -180,9 +182,6 @@ Version: %s (rev: %s/%s)`, version, revision, runtime.Version())
 
 // Run the horenso
 func Run(args []string) int {
-	log.SetPrefix("[horenso] ")
-	log.SetFlags(0)
-
 	p, ho, cmdArgs, err := parseArgs(args)
 	if err != nil || len(cmdArgs) < 1 {
 		if ferr, ok := err.(*flags.Error); !ok || ferr.Type != flags.ErrHelp {
