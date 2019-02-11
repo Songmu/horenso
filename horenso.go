@@ -28,8 +28,8 @@ type horenso struct {
 	Tag            string   `short:"t" long:"tag" value-name:"job-name" description:"tag of the job"`
 	OverrideStatus bool     `short:"o" long:"override-status" description:"override command exit status, always exit 0"`
 	Verbose        []bool   `short:"v" long:"verbose" description:"verbose output. it can be stacked like -vv for more detailed log"`
-	Logfile        string   `short:"l" long:"log" value-name:"logfile-path" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
-	Config         string   `short:"c" long:"config" value-name:"config-file" description:"config file"`
+	Logfile        string   `short:"l" long:"log" value-name:"/path/to/logfile" description:"logfile path. The strftime format like '%Y%m%d.log' is available."`
+	Config         string   `short:"c" long:"config" value-name:"/path/to/config.yaml" description:"config file"`
 
 	outStream, errStream io.Writer
 }
