@@ -2,12 +2,12 @@
 
 
 [[projects]]
-  digest = "1:4a9d1054b9125b6a61933b19df1adeb3977d433cf6d119d3f857010632387d34"
+  digest = "1:e5632e07aab0f2102ccaab79c7c72ec4b0acdde0874c79559d67022ee2201b50"
   name = "github.com/Songmu/timestamper"
   packages = ["."]
   pruneopts = "UT"
-  revision = "6228595da85e77b5151456c1c8a83c65d5e70f00"
-  version = "v0.0.1"
+  revision = "2c8164633b0e26a6f72f126268d1bf1558975f00"
+  version = "v0.0.2"
 
 [[projects]]
   branch = "master"
