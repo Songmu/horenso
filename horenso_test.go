@@ -228,6 +228,7 @@ func TestRun_notfound(t *testing.T) {
 
 func TestRun_config(t *testing.T) {
 	_, ho, cmdArgs, err := parseArgs([]string{
+		"-r", "hhh",
 		"--config", "testdata/config.yaml",
 		"--",
 		"go", "run", "testdata/run.go",
@@ -241,6 +242,10 @@ func TestRun_config(t *testing.T) {
 	r, err := ho.run(cmdArgs)
 	if err != nil {
 		t.Errorf("err should be nil, but: %s", err)
+	}
+
+	if !reflect.DeepEqual(ho.Reporter, []string{"hhh", "hoge", "fuga"}) {
+		t.Errorf("something went wrong")
 	}
 
 	if r.ExitCode != 0 {
