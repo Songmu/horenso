@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.9.0](https://github.com/Songmu/horenso/compare/v0.3.0...v0.9.0) (2019-02-15)
+
+* introduce go modules [#30](https://github.com/Songmu/horenso/pull/30) ([Songmu](https://github.com/Songmu))
+* add --config option [#29](https://github.com/Songmu/horenso/pull/29) ([Songmu](https://github.com/Songmu))
+* [incompatible] quit to use pointer for ExitCode. use -1 as default value [#28](https://github.com/Songmu/horenso/pull/28) ([Songmu](https://github.com/Songmu))
+* enhance tests around logs [#27](https://github.com/Songmu/horenso/pull/27) ([Songmu](https://github.com/Songmu))
+* [incompatible] Reduce pointer from type Report [#25](https://github.com/Songmu/horenso/pull/25) ([Songmu](https://github.com/Songmu))
+* introduce Songmu/timestamper [#26](https://github.com/Songmu/horenso/pull/26) ([Songmu](https://github.com/Songmu))
+
 ## [v0.3.0](https://github.com/Songmu/horenso/compare/v0.2.0...v0.3.0) (2019-02-10)
 
 * Update deps [#24](https://github.com/Songmu/horenso/pull/24) ([Songmu](https://github.com/Songmu))
