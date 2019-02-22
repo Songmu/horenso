@@ -315,6 +315,43 @@ func TestRunHugeOutput(t *testing.T) {
 	}
 }
 
+func TestSplitHandlerCmdStr(t *testing.T) {
+	tests := []struct {
+		name   string
+		ho     horenso
+		expect []string
+	}{
+		{
+			name: "Linux style path",
+			ho: horenso{
+				Reporter: []string{"go run testdata/reporter.go arg1 arg2"},
+			},
+			expect: []string{"go", "run", "testdata/reporter.go", "arg1", "arg2"},
+		},
+		{
+			name: "Windows style path",
+			ho: horenso{
+				Reporter: []string{`go run C:\testdata\reporter.go arg1 arg2`},
+			},
+			expect: []string{"go", "run", `C:\testdata\reporter.go`, "arg1", "arg2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			for _, r := range tt.ho.Reporter {
+				args, err := tt.ho.splitHandlerCmdStr(r)
+				if err != nil {
+					t.Errorf("err should be nil but: %s", err)
+				}
+				if !reflect.DeepEqual(tt.expect, args) {
+					t.Errorf("should be %v but: %v", tt.expect, args)
+				}
+			}
+		})
+	}
+}
+
 func equalTimePtr(t1, t2 *time.Time) bool {
 	if t1 == nil && t2 == nil {
 		return true
