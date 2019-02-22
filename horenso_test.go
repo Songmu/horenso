@@ -340,10 +340,7 @@ func TestSplitHandlerCmdStr(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			for _, r := range tt.ho.Reporter {
-				args, err := tt.ho.splitHandlerCmdStr(r)
-				if err != nil {
-					t.Errorf("err should be nil but: %s", err)
-				}
+				args := tt.ho.splitHandlerCmdStr(r)
 				if !reflect.DeepEqual(tt.expect, args) {
 					t.Errorf("should be %v but: %v", tt.expect, args)
 				}
