@@ -33,7 +33,7 @@ bump: devel-deps
 
 crossbuild: devel-deps
 	GO111MODULE=on goxz -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
-	  -os=linux,darwin,freebsd -arch=386,amd64 \
+	  -os=linux,darwin,freebsd,windows -arch=386,amd64 \
 	  -d=./dist/v$(VERSION) ./cmd/horenso
 
 upload:
