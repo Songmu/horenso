@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -329,6 +330,13 @@ func TestSplitHandlerCmdStr(t *testing.T) {
 			expect: []string{"go", "run", "testdata/reporter.go", "arg1", "arg2"},
 		},
 		{
+			name: "Linux style path sh -c `cmd`",
+			ho: horenso{
+				Reporter: []string{`sh -c go run testdata/reporter.go arg1 arg2`},
+			},
+			expect: []string{"sh", "-c", "go", "run", "testdata/reporter.go", "arg1", "arg2"},
+		},
+		{
 			name: "Windows style path",
 			ho: horenso{
 				Reporter: []string{`go run C:\testdata\reporter.go arg1 arg2`},
@@ -339,8 +347,14 @@ func TestSplitHandlerCmdStr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "Windows style path" && runtime.GOOS != "windows" {
+				return
+			}
 			for _, r := range tt.ho.Reporter {
-				args := tt.ho.splitHandlerCmdStr(r)
+				args, err := tt.ho.splitHandlerCmdStr(r)
+				if err != nil {
+					t.Errorf("err should be nil but: %s", err)
+				}
 				if !reflect.DeepEqual(tt.expect, args) {
 					t.Errorf("should be %v but: %v", tt.expect, args)
 				}
