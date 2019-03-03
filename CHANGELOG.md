@@ -1,5 +1,10 @@
 # Changelog
 
+## [v0.9.1](https://github.com/Songmu/horenso/compare/v0.9.0...v0.9.1) (2019-03-03)
+
+* introduce godzil [#33](https://github.com/Songmu/horenso/pull/33) ([Songmu](https://github.com/Songmu))
+* Fix Windows style path [#32](https://github.com/Songmu/horenso/pull/32) ([hiroakis](https://github.com/hiroakis))
+
 ## [v0.9.0](https://github.com/Songmu/horenso/compare/v0.3.0...v0.9.0) (2019-02-15)
 
 * introduce go modules [#30](https://github.com/Songmu/horenso/pull/30) ([Songmu](https://github.com/Songmu))
