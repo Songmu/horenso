@@ -8,7 +8,7 @@ endif
 export GO111MODULE=on
 
 devel-deps:
-	GO111MODULE=off go get ${u}
+	GO111MODULE=off go get ${u} \
 	  golang.org/x/lint/golint            \
 	  github.com/mattn/goveralls          \
 	  github.com/Songmu/goxz/cmd/goxz     \
@@ -29,7 +29,7 @@ build:
 	go build -ldflags=$(BUILD_LDFLAGS) ./cmd/horenso
 
 bump: devel-deps
-	godzil releaes
+	godzil release
 
 crossbuild: devel-deps
 	goxz -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
