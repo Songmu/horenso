@@ -257,9 +257,20 @@ func (ho *horenso) appendOut(base, out string) string {
 	return base + indent + strings.Replace("Output:\n"+out, "\n", "\n"+indent, -1)
 }
 
+func (ho *horenso) splitHandlerCmdStr(cmdStr string) ([]string, error) {
+	switch runtime.GOOS {
+	case "windows":
+		args := strings.Split(cmdStr, " ")
+		return args, nil
+	default:
+		args, err := shellquote.Split(cmdStr)
+		return args, err
+	}
+}
+
 func (ho *horenso) runHandler(cmdStr string, json []byte) error {
 	ho.logf(info, "starting to run the handler %q", cmdStr)
-	args, err := shellquote.Split(cmdStr)
+	args, err := ho.splitHandlerCmdStr(cmdStr)
 	if err != nil || len(args) < 1 {
 		ho.logf(warn, "failed to run the handler %q: invalid handler arguments", cmdStr)
 		return fmt.Errorf("invalid handler: %q", cmdStr)
