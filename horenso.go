@@ -146,7 +146,7 @@ func (ho *horenso) run(args []string) (Report, error) {
 	stdoutPipe2 := io.TeeReader(stdoutPipe, io.MultiWriter(&bufStdout, wtr))
 	stderrPipe2 := io.TeeReader(stderrPipe, io.MultiWriter(&bufStderr, wtr))
 
-	ho.logf(info, "starting executiton of the command %q", r.Command)
+	ho.logf(info, "starting execution of the command %q", r.Command)
 	r.StartAt = now()
 	err = cmd.Start()
 	if err != nil {
