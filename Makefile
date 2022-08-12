@@ -33,7 +33,7 @@ CREDITS: deps devel-deps go.sum
 .PHONY: crossbuild
 crossbuild: devel-deps CREDITS
 	godzil crossbuild -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
-	  -os=linux,darwin,freebsd,windows -arch=386,amd64 \
+	  -os=linux,darwin,windows -arch=amd64,arm64 \
 	  -d=./dist/v$(VERSION) ./cmd/horenso
 
 .PHONY: upload
