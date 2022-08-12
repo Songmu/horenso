@@ -27,8 +27,11 @@ build:
 release: devel-deps
 	godzil release
 
+CREDITS: deps devel-deps go.sum
+	godzil credits -w
+
 .PHONY: crossbuild
-crossbuild: devel-deps
+crossbuild: devel-deps CREDITS
 	godzil crossbuild -pv=v$(VERSION) -build-ldflags=$(BUILD_LDFLAGS) \
 	  -os=linux,darwin,freebsd,windows -arch=386,amd64 \
 	  -d=./dist/v$(VERSION) ./cmd/horenso
