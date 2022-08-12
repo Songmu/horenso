@@ -38,4 +38,4 @@ crossbuild: devel-deps CREDITS
 
 .PHONY: upload
 upload:
-	ghr -body="$$(./godzil changelog --latest -F markdown)" v$(VERSION) dist/v$(VERSION)
+	ghr -body="$$(godzil changelog --latest -F markdown)" v$(VERSION) dist/v$(VERSION)
