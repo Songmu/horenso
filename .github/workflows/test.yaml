@@ -26,8 +26,6 @@ jobs:
       if: "matrix.os == 'windows-latest'"
     - name: checkout
       uses: actions/checkout@v3
-    - run: make assets-test
-      if: "matrix.os == 'ubuntu-latest'"
     - name: test
       run: go test -race -coverprofile coverage.out -covermode atomic
     - name: Upload coverage to Codecov
