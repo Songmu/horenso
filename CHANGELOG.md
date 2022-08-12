@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.10.0](https://github.com/Songmu/horenso/compare/v0.9.1...v0.10.0) (2022-08-12)
+
+* add arm64 support and drop 386 arch and freebsd support [#36](https://github.com/Songmu/horenso/pull/36) ([Songmu](https://github.com/Songmu))
+* update CI related stuffs [#35](https://github.com/Songmu/horenso/pull/35) ([Songmu](https://github.com/Songmu))
+* fix typo [#34](https://github.com/Songmu/horenso/pull/34) ([Sixeight](https://github.com/Sixeight))
+
 ## [v0.9.1](https://github.com/Songmu/horenso/compare/v0.9.0...v0.9.1) (2019-03-03)
 
 * introduce godzil [#33](https://github.com/Songmu/horenso/pull/33) ([Songmu](https://github.com/Songmu))
