@@ -1,13 +1,15 @@
 horenso(報・連・相)
 ===================
 
-[![Build Status](https://travis-ci.org/Songmu/horenso.png?branch=master)][travis]
-[![Coverage Status](https://coveralls.io/repos/Songmu/horenso/badge.png?branch=master)][coveralls]
-[![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license]
+[![Test Status](https://github.com/Songmu/horenso/workflows/test/badge.svg?branch=main)][actions]
+[![codecov.io](https://codecov.io/github/Songmu/horenso/coverage.svg?branch=main)][codecov]
+[![MIT License](https://img.shields.io/github/license/Songmu/horenso)][license]
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/Songmu/horenso)][PkgGoDev]
 
-[travis]: https://travis-ci.org/Songmu/horenso
-[coveralls]: https://coveralls.io/r/Songmu/horenso?branch=master
-[license]: https://github.com/Songmu/horenso/blob/master/LICENSE
+[actions]: https://github.com/Songmu/horenso/actions?workflow=test
+[codecov]: https://codecov.io/github/Songmu/horenso?branch=main
+[license]: https://github.com/Songmu/horenso/blob/main/LICENSE
+[PkgGoDev]: https://pkg.go.dev/github.com/Songmu/horenso
 
 ## Description
 
