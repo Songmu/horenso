@@ -22,6 +22,10 @@ Command wrapper for reporting the result. It is useful for cron jobs.
 Built binaries are available on gihub releases.
 <https://github.com/Songmu/horenso/releases>
 
+You can also install horenso with [aqua](https://aquaproj.github.io/).
+
+    % aqua g -i Songmu/horenso
+
 ## Synopsis
 
     % horenso --reporter /path/to/report.pl -- /path/to/yourjob
