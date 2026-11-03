@@ -2,7 +2,7 @@ package horenso
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 	"regexp"
@@ -12,7 +12,7 @@ import (
 )
 
 func temp() string {
-	f, err := ioutil.TempFile("", "")
+	f, err := os.CreateTemp("", "")
 	if err != nil {
 		panic(err)
 	}
@@ -21,7 +21,7 @@ func temp() string {
 }
 
 func parseReport(fname string) Report {
-	byt, err := ioutil.ReadFile(fname)
+	byt, err := os.ReadFile(fname)
 	if err != nil {
 		panic("failed to read " + fname)
 	}
@@ -53,8 +53,8 @@ func TestRun(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	ho.errStream = ioutil.Discard
-	ho.outStream = ioutil.Discard
+	ho.errStream = io.Discard
+	ho.outStream = io.Discard
 
 	r, err := ho.run(cmdArgs)
 	if err != nil {
@@ -136,8 +136,8 @@ func TestRun_log(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	ho.errStream = ioutil.Discard
-	ho.outStream = ioutil.Discard
+	ho.errStream = io.Discard
+	ho.outStream = io.Discard
 
 	r, err := ho.run(cmdArgs)
 	if err != nil {
@@ -173,7 +173,7 @@ func TestRun_log(t *testing.T) {
 	// 2019-02-11T16:39:18.507451+09:00 1
 	// 2019-02-11T16:39:18.507666+09:00 2
 	// 2019-02-11T16:39:18.507668+09:00 3
-	logdata, _ := ioutil.ReadFile(logfile)
+	logdata, _ := os.ReadFile(logfile)
 	timeRegStr := `[0-9]{4}-[0-9]{2}-[0-9]{2}T` +
 		`[0-9]{2}:[0-9]{2}:[0-9]{2}\.[0-9]{6}` +
 		`(?:Z|[-+][0-9]{2}:[0-9]{2}) `
@@ -198,8 +198,8 @@ func TestRun_notfound(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	ho.errStream = ioutil.Discard
-	ho.outStream = ioutil.Discard
+	ho.errStream = io.Discard
+	ho.outStream = io.Discard
 
 	r, err := ho.run(cmdArgs)
 	if err == nil {
@@ -237,8 +237,8 @@ func TestRun_config(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	ho.errStream = ioutil.Discard
-	ho.outStream = ioutil.Discard
+	ho.errStream = io.Discard
+	ho.outStream = io.Discard
 
 	r, err := ho.run(cmdArgs)
 	if err != nil {
@@ -277,8 +277,8 @@ func TestRunHugeOutput(t *testing.T) {
 	if err != nil {
 		t.Errorf("err should be nil but: %s", err)
 	}
-	ho.errStream = ioutil.Discard
-	ho.outStream = ioutil.Discard
+	ho.errStream = io.Discard
+	ho.outStream = io.Discard
 
 	r, err := ho.run(cmdArgs)
 	if err != nil {
