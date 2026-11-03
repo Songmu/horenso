@@ -27,31 +27,11 @@ jobs:
       actions: read
       contents: write
     steps:
-    - name: checkout
-      uses: actions/checkout@v7.0.1
-      with:
-        persist-credentials: false
-    - name: setup go
-      uses: actions/setup-go@v7.0.0
-      with:
-        go-version-file: go.mod
     - name: download release artifacts
       uses: actions/download-artifact@v8.0.2
       with:
         name: release-${{ github.ref_name }}
         path: release
-    - name: setup godzil
-      uses: Songmu/godzil@v0.23.2
-    - name: prepare release notes
-      id: notes
-      run: |
-        notes="$(godzil changelog --latest -F markdown)"
-        delimiter="$(uuidgen)"
-        {
-          echo "body<<$delimiter"
-          echo "$notes"
-          echo "$delimiter"
-        } >> "$GITHUB_OUTPUT"
     - name: publish GitHub release
       uses: tcnksm/ghr@v0.18.5
       with:
@@ -60,5 +40,5 @@ jobs:
         tag: ${{ github.ref_name }}
         token: ${{ github.token }}
         path: release
-        body: ${{ steps.notes.outputs.body }}
+        generatenotes: "true"
         replace: "true"

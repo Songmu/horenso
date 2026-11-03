@@ -24,12 +24,10 @@ jobs:
       uses: actions/setup-go@v7.0.0
       with:
         go-version-file: go.mod
-    - name: setup godzil
-      uses: Songmu/godzil@v0.23.2
     - name: prepare release build
       id: build
       run: |
-        godzil credits -w
+        go run github.com/Songmu/gocredits/cmd/gocredits@v0.5.0 -w
         echo "revision=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
     - name: build release archives
       id: goxz
