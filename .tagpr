@@ -2,5 +2,5 @@
 	vPrefix = true
 	releaseBranch = main
 	versionFile = version.go
-	release = false
+	release = draft
 	command = make prepare-release
