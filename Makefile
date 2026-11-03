@@ -7,7 +7,7 @@ endif
 
 .PHONY: deps
 deps:
-	go get ${u} -d
+	go get ${u}
 	go mod tidy
 
 .PHONY: devel-deps
@@ -26,6 +26,12 @@ build:
 .PHONY: release
 release: devel-deps
 	godzil release
+
+.PHONY: prepare-release
+prepare-release:
+	go mod tidy
+	go run github.com/Songmu/gocredits/cmd/gocredits@v0.5.0 -w
+	git update-index --add --remove -- go.mod go.sum CREDITS
 
 CREDITS: deps devel-deps go.sum
 	godzil credits -w
