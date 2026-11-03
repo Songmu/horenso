@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.11.1](https://github.com/Songmu/horenso/compare/v0.11.0...v0.11.1) - 2026-11-03
+
+- fix: create draft releases with tagpr to avoid release creation failures by @Songmu in https://github.com/Songmu/horenso/pull/42
+
 ## [v0.11.0](https://github.com/Songmu/horenso/compare/v0.10.0...v0.11.0) - 2026-11-03
 
 - docs: add the installation guide with aqua by @suzuki-shunsuke in https://github.com/Songmu/horenso/pull/38
