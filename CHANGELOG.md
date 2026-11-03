@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.11.0](https://github.com/Songmu/horenso/compare/v0.10.0...v0.11.0) - 2026-11-03
+
+- docs: add the installation guide with aqua by @suzuki-shunsuke in https://github.com/Songmu/horenso/pull/38
+- Modernize CI and dependency management with attested tagpr releases by @Songmu in https://github.com/Songmu/horenso/pull/39
+- Switch YAML configuration parsing to goccy/go-yaml by @Songmu in https://github.com/Songmu/horenso/pull/41
+
 ## [v0.10.0](https://github.com/Songmu/horenso/compare/v0.9.1...v0.10.0) (2022-08-12)
 
 * add arm64 support and drop 386 arch and freebsd support [#36](https://github.com/Songmu/horenso/pull/36) ([Songmu](https://github.com/Songmu))
