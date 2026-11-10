@@ -1,5 +1,5 @@
-github.com/Songmu/timestamper v0.1.0 h1:xRQjNYL5t4wFWuEBi2A3AaNvrYy8s6FygAo5QNA4y30=
-github.com/Songmu/timestamper v0.1.0/go.mod h1:V4n9Aaq9J7YFwliMSgFcnk9CNsQ0S+CjLh4LPeHp4eI=
+github.com/Songmu/timestamper v0.1.1 h1:PZbyM960MIvLp4iWSL/KQ3OBzhSDLDpiJ2oRR93TbgQ=
+github.com/Songmu/timestamper v0.1.1/go.mod h1:h3OcDTy1QdMcsr0bSBZ74diskiSpO86stQthqunovsE=
 github.com/Songmu/wrapcommander v0.1.0 h1:y8/yk9/PHT983weH+ehZIOJ7JtwAlI1AkfUpUNCj1SY=
 github.com/Songmu/wrapcommander v0.1.0/go.mod h1:EC2y4OnN8PkdMnaCwcSzItewq+f0yqUvS30kcS4vmn0=
 github.com/goccy/go-yaml v1.19.2 h1:PmFC1S6h8ljIz6gMRBopkjP1TVT7xuwrButHID66PoM=
