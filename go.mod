@@ -11,7 +11,7 @@ require (
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51
 	github.com/lestrrat-go/strftime v1.2.1
-	golang.org/x/sync v0.24.0
+	golang.org/x/sync v0.25.0
 	golang.org/x/text v0.43.0
 )
 
